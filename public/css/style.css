@@ -39,7 +39,8 @@ h2 { font-size: 1.3rem; }
 
 label { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.85rem; color: var(--texto2); }
 
-input[type="text"], input[type="email"], input[type="password"], input[type="tel"] {
+input[type="text"], input[type="email"], input[type="password"], input[type="tel"],
+input[type="number"], input[type="date"], input[type="time"], select {
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid var(--borda);
   border-radius: 8px;
@@ -49,7 +50,11 @@ input[type="text"], input[type="email"], input[type="password"], input[type="tel
   width: 100%;
 }
 
-input:focus { outline: 2px solid var(--primaria); border-color: transparent; }
+select option { background: #1e293b; }
+
+input:focus, select:focus { outline: 2px solid var(--primaria); border-color: transparent; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
 
 .check { flex-direction: row; align-items: center; gap: 0.5rem; }
 

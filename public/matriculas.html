@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matrículas — Escola de Música</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <strong>Escola de Música</strong>
+    <nav class="menu">
+      <a href="/app.html">Início</a>
+      <a href="/professores.html">Professores</a>
+      <a href="/alunos.html">Alunos</a>
+      <a href="/turmas.html">Turmas</a>
+      <a href="/matriculas.html" class="ativo">Matrículas</a>
+      <a href="#" data-futuro>Grade</a>
+      <a href="#" data-futuro>Financeiro</a>
+      <a href="#" data-futuro>Relatórios</a>
+    </nav>
+    <button id="sair" class="link">Sair</button>
+  </header>
+
+  <main class="wrap">
+    <div class="row">
+      <h2>Matrículas</h2>
+      <button id="novo" class="btn">+ Nova matrícula</button>
+    </div>
+
+    <table class="tabela">
+      <thead>
+        <tr><th>Aluno</th><th>Tipo</th><th>Turma / Professor</th><th>Pagamento</th><th>Valor</th><th>Status</th><th>Início</th><th>Ações</th></tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+
+    <dialog id="modal">
+      <form id="form" class="form">
+        <h3 id="titulo-modal">Nova matrícula</h3>
+        <input type="hidden" id="id">
+        <label>Aluno <select id="aluno_id"></select></label>
+        <div class="grid2">
+          <label>Tipo
+            <select id="tipo">
+              <option value="turma">Turma</option>
+              <option value="individual">Individual</option>
+            </select>
+          </label>
+          <label>Pagamento
+            <select id="tipo_pagamento">
+              <option value="mensal">Mensal</option>
+              <option value="avulsa">Avulsa (por aula)</option>
+            </select>
+          </label>
+        </div>
+        <label id="campo-turma">Turma <select id="turma_id"></select></label>
+        <label id="campo-professor">Professor <select id="professor_id"></select></label>
+        <div class="grid2">
+          <label id="campo-valor-mensal">Valor mensal (R$) <input type="number" id="valor_mensal" min="0" step="0.01"></label>
+          <label id="campo-valor-aula">Valor por aula (R$) <input type="number" id="valor_aula" min="0" step="0.01"></label>
+        </div>
+        <div class="grid2">
+          <label>Status
+            <select id="status_matricula">
+              <option value="ativa">Ativa</option>
+              <option value="trancada">Trancada</option>
+              <option value="concluida">Concluída</option>
+            </select>
+          </label>
+          <label>Data de início <input type="date" id="data_inicio"></label>
+        </div>
+        <div class="row gap">
+          <button type="submit" class="btn">Salvar</button>
+          <button type="button" class="btn ghost" id="cancelar">Cancelar</button>
+        </div>
+        <p class="error" id="erro"></p>
+      </form>
+    </dialog>
+  </main>
+
+  <script type="module" src="/js/matriculas.js"></script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Turmas — Escola de Música</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <strong>Escola de Música</strong>
+    <nav class="menu">
+      <a href="/app.html">Início</a>
+      <a href="/professores.html">Professores</a>
+      <a href="/alunos.html">Alunos</a>
+      <a href="/turmas.html" class="ativo">Turmas</a>
+      <a href="/matriculas.html">Matrículas</a>
+      <a href="#" data-futuro>Grade</a>
+      <a href="#" data-futuro>Financeiro</a>
+      <a href="#" data-futuro>Relatórios</a>
+    </nav>
+    <button id="sair" class="link">Sair</button>
+  </header>
+
+  <main class="wrap">
+    <div class="row">
+      <h2>Turmas</h2>
+      <button id="novo" class="btn">+ Nova turma</button>
+    </div>
+
+    <table class="tabela">
+      <thead>
+        <tr><th>Nome</th><th>Instrumento</th><th>Professor</th><th>Dia</th><th>Horário</th><th>Valor mensal</th><th>Status</th><th>Ações</th></tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+
+    <dialog id="modal">
+      <form id="form" class="form">
+        <h3 id="titulo-modal">Nova turma</h3>
+        <input type="hidden" id="id">
+        <div class="grid2">
+          <label>Nome <input type="text" id="nome" required></label>
+          <label>Instrumento <input type="text" id="instrumento"></label>
+        </div>
+        <label>Professor <select id="professor_id"></select></label>
+        <div class="grid2">
+          <label>Dia da semana
+            <select id="dia_semana">
+              <option value="Segunda">Segunda</option>
+              <option value="Terça">Terça</option>
+              <option value="Quarta">Quarta</option>
+              <option value="Quinta">Quinta</option>
+              <option value="Sexta">Sexta</option>
+              <option value="Sábado">Sábado</option>
+              <option value="Domingo">Domingo</option>
+            </select>
+          </label>
+          <label>Horário <input type="time" id="horario"></label>
+        </div>
+        <div class="grid2">
+          <label>Valor mensal (R$) <input type="number" id="valor_mensal" min="0" step="0.01"></label>
+          <label>Status
+            <select id="status">
+              <option value="ativa">Ativa</option>
+              <option value="encerrada">Encerrada</option>
+            </select>
+          </label>
+        </div>
+        <div class="row gap">
+          <button type="submit" class="btn">Salvar</button>
+          <button type="button" class="btn ghost" id="cancelar">Cancelar</button>
+        </div>
+        <p class="error" id="erro"></p>
+      </form>
+    </dialog>
+  </main>
+
+  <script type="module" src="/js/turmas.js"></script>
+</body>
+</html>
