@@ -6,6 +6,7 @@
 -- 1. Vincula contas do Supabase Auth ao cadastro local
 ALTER TABLE public.usuarios ADD COLUMN IF NOT EXISTS auth_uid uuid;
 ALTER TABLE public.usuarios ADD CONSTRAINT usuarios_auth_uid_key UNIQUE (auth_uid);
+ALTER TABLE public.usuarios ALTER COLUMN senha_hash DROP NOT NULL;
 
 -- 2. Funções auxiliares usadas nas políticas RLS
 CREATE OR REPLACE FUNCTION public.usuario_atual() RETURNS bigint
