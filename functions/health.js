@@ -9,31 +9,26 @@ exports.handler = async () => {
     'VITE_SUPABASE_KEY',
     'SUPABASE_KEY',
   ];
-  const vars = {};
+
+  const values = {};
   for (const n of names) {
-    if (process.env[n]) vars[n] = 'definida';
+    if (process.env[n]) values[n] = process.env[n];
   }
-  const url = vars['SUPABASE_URL'] || vars['VITE_SUPABASE_URL'] || null;
+
+  const url =
+    values['SUPABASE_URL'] || values['VITE_SUPABASE_URL'] || null;
   const key =
-    vars['SUPABASE_PUBLISHABLE_KEY'] ||
-    vars['SUPABASE_ANON_KEY'] ||
-    vars['VITE_SUPABASE_KEY'] ||
-    vars['SUPABASE_KEY'] ||
+    values['SUPABASE_PUBLISHABLE_KEY'] ||
+    values['SUPABASE_ANON_KEY'] ||
+    values['VITE_SUPABASE_KEY'] ||
+    values['SUPABASE_KEY'] ||
     null;
 
   if (!url || !key) {
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ db: 'not-configured', vars }),
-    };
-  }
-
-  if (!/^https?:\/\//.test(url)) {
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ db: 'url-invalida', url }),
+      body: JSON.stringify({ db: 'not-configured', vars: Object.keys(values) }),
     };
   }
 
