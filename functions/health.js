@@ -29,6 +29,14 @@ exports.handler = async () => {
     };
   }
 
+  if (!/^https?:\/\//.test(url)) {
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ db: 'url-invalida', url }),
+    };
+  }
+
   try {
     const supabase = createClient(url, key);
     const { error } = await supabase.from('alunos').select('id').limit(1);
