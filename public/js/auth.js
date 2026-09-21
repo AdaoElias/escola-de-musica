@@ -2,7 +2,7 @@ import { getSupabase } from './supabase.js';
 
 export async function login(email, senha) {
   const sb = await getSupabase();
-  const { error } = await sb.auth.signInWithPassword({ email, senha });
+  const { error } = await sb.auth.signInWithPassword({ email, password: senha });
   return error;
 }
 
