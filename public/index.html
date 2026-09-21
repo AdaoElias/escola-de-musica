@@ -42,7 +42,8 @@
         document.getElementById('senha').value
       );
       if (err) {
-        erro.textContent = 'E-mail ou senha incorretos.';
+        erro.textContent = 'Erro: ' + (err.message || err.error_description || 'desconhecido') + ' (' + (err.status || '?') + ')';
+        console.error('Login error:', err);
         btn.disabled = false;
         btn.textContent = 'Entrar';
       } else {
