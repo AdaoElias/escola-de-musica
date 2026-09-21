@@ -18,9 +18,10 @@ CREATE TYPE forma_pagamento  AS ENUM ('pix', 'cartao', 'dinheiro', 'boleto');
 -- Contas de acesso
 CREATE TABLE usuarios (
   id          BIGSERIAL PRIMARY KEY,
+  auth_uid    UUID UNIQUE,              -- id da conta no Supabase Auth
   nome        TEXT NOT NULL,
   email       TEXT NOT NULL UNIQUE,
-  senha_hash  TEXT NOT NULL,
+  senha_hash  TEXT,                     -- gerenciado pelo Supabase Auth
   perfil      perfil_usuario NOT NULL DEFAULT 'professor',
   ativo       BOOLEAN NOT NULL DEFAULT true,
   criado_em   TIMESTAMPTZ NOT NULL DEFAULT now()

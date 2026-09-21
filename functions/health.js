@@ -34,12 +34,12 @@ exports.handler = async () => {
 
   try {
     const supabase = createClient(url, key);
-    const { error } = await supabase.from('alunos').select('id').limit(1);
+    const { data, error } = await supabase.rpc('health_check');
     if (error) throw error;
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ db: 'conectado' }),
+      body: JSON.stringify({ db: 'conectado', rpc: data }),
     };
   } catch (err) {
     return {

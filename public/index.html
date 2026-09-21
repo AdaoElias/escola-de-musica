@@ -3,15 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Escola de Música</title>
+  <title>Login — Escola de Música</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
   <main class="card">
-    <h1>Escola de Música 🎵</h1>
-    <p class="status" id="status">Conectando…</p>
-    <p class="sub" id="supabase-msg">Sem conexão com o banco ainda.</p>
+    <h1>Escola de Música</h1>
+    <p class="sub">Acesse o sistema</p>
+
+    <form id="login-form" class="form">
+      <label>
+        E-mail
+        <input type="email" id="email" required autocomplete="username" placeholder="seu@email.com">
+      </label>
+      <label>
+        Senha
+        <input type="password" id="senha" required autocomplete="current-password" placeholder="••••••••">
+      </label>
+      <p class="error" id="erro" role="alert"></p>
+      <button type="submit" id="btn">Entrar</button>
+    </form>
   </main>
-  <script src="/js/app.js"></script>
+
+  <script type="module">
+    import { login } from '/js/auth.js';
+
+    const form = document.getElementById('login-form');
+    const btn = document.getElementById('btn');
+    const erro = document.getElementById('erro');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      erro.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Entrando…';
+      const err = await login(
+        document.getElementById('email').value.trim(),
+        document.getElementById('senha').value
+      );
+      if (err) {
+        erro.textContent = 'E-mail ou senha incorretos.';
+        btn.disabled = false;
+        btn.textContent = 'Entrar';
+      } else {
+        window.location.href = '/app.html';
+      }
+    });
+  </script>
 </body>
 </html>
