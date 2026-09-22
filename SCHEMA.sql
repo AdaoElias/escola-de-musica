@@ -36,6 +36,10 @@ CREATE TABLE professores (
   email       TEXT,
   telefone    TEXT,
   formacao    TEXT,
+  endereco    TEXT,
+  bairro      TEXT,
+  cidade      TEXT,
+  cep         TEXT,
   ativo       BOOLEAN NOT NULL DEFAULT true,
   criado_em   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -46,6 +50,10 @@ CREATE TABLE alunos (
   nome        TEXT NOT NULL,
   telefone    TEXT,
   email       TEXT,
+  endereco    TEXT,
+  bairro      TEXT,
+  cidade      TEXT,
+  cep         TEXT,
   observacao  TEXT,
   ativo       BOOLEAN NOT NULL DEFAULT true,
   criado_em   TIMESTAMPTZ NOT NULL DEFAULT now()

@@ -161,10 +161,12 @@ public/js/         → supabase.js, auth.js, ui.js, app.js, professores.js, alun
 public/css/style.css (design system claro)
 functions/         → hello.js, health.js, client-config.js
 netlify.toml, .env.example, .env.local (não versionado)
-REQUISITOS.md, SCHEMA.sql, MIGRACAO_ETAPA2.sql, MIGRACAO_ETAPA4.sql
+REQUISITOS.md, SCHEMA.sql, MIGRACAO_ETAPA2.sql, MIGRACAO_ETAPA4.sql, MIGRACAO_ENDERECO.sql
 ```
 
 **FIX (a aplicar no Supabase):** `MIGRACAO_FIX_RLS.sql` — funções `usuario_atual/administrador_atual/professor_atual` agora são `SECURITY DEFINER`. Sem isso, todo CRUD/logado estoura "stack depth limit exceeded" (recursão de RLS: função lê usuarios/professores → política da própria tabela chama a função de novo).
+
+**Migração `MIGRACAO_ENDERECO.sql`:** adiciona `endereco, bairro, cidade, cep` em `professores` e `alunos`. Forms com busca de CEP via **ViaCEP** (helper `buscarCep` em `ui.js`; botão "Buscar CEP", blur/Enter também buscam). Coluna "Cidade" nas duas tabelas.
 
 **Conta de teste ativa:** `teste@escola.com` (admin). Sugestão: trocar pela conta definitiva.
 

@@ -1,5 +1,5 @@
 import { guard, logout, perfil } from './auth.js';
-import { toast, ligaFecharModais } from './ui.js';
+import { toast, ligaFecharModais, buscarCep } from './ui.js';
 
 const sb = await guard();
 if (!sb) throw new Error('redirecionado');
@@ -29,6 +29,7 @@ async function carregar() {
       <td>${p.instrumento || '—'}</td>
       <td>${p.email || '—'}</td>
       <td>${p.telefone || '—'}</td>
+      <td>${p.cidade || '—'}</td>
       <td>${p.ativo ? '<span class="badge b-ok">Ativo</span>' : '<span class="badge b-mut">Inativo</span>'}</td>
       <td class="acoes">
         ${p.ativo ? '<button class="mini" data-editar="' + p.id + '">Editar</button>' : ''}
@@ -37,13 +38,13 @@ async function carregar() {
     tbody.appendChild(tr);
   }
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum professor cadastrado ainda.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum professor cadastrado ainda.</td></tr>';
   }
 }
 
 function mostrarErroTabela(msg) {
   const tr = document.createElement('tr');
-  tr.innerHTML = '<td colspan="6" class="error">Erro ao carregar: ' + msg + '</td>';
+  tr.innerHTML = '<td colspan="7" class="error">Erro ao carregar: ' + msg + '</td>';
   tbody.appendChild(tr);
 }
 
@@ -58,11 +59,34 @@ function abrirModal(prof = null) {
   document.getElementById('email').value = prof ? (prof.email || '') : '';
   document.getElementById('telefone').value = prof ? (prof.telefone || '') : '';
   document.getElementById('formacao').value = prof ? (prof.formacao || '') : '';
+  document.getElementById('cep').value = prof ? (prof.cep || '') : '';
+  document.getElementById('endereco').value = prof ? (prof.endereco || '') : '';
+  document.getElementById('bairro').value = prof ? (prof.bairro || '') : '';
+  document.getElementById('cidade').value = prof ? (prof.cidade || '') : '';
   document.getElementById('ativo').checked = prof ? prof.ativo : true;
   modal.showModal();
 }
 
+async function preencherEndereco() {
+  const res = await buscarCep(document.getElementById('cep'));
+  if (!res) return toast('CEP não encontrado. Digite o endereço manualmente.', 'erro');
+  document.getElementById('endereco').value = res.endereco;
+  document.getElementById('bairro').value = res.bairro;
+  document.getElementById('cidade').value = res.cidade;
+  if (!res.cidade) document.getElementById('cidade').value = res.uf;
+}
+
 document.getElementById('novo').addEventListener('click', () => abrirModal());
+document.getElementById('buscar-cep').addEventListener('click', preencherEndereco);
+document.getElementById('cep').addEventListener('blur', () => {
+  if ((document.getElementById('cep').value || '').replace(/\D/g, '').length === 8) preencherEndereco();
+});
+document.getElementById('cep').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    preencherEndereco();
+  }
+});
 document.getElementById('cancelar').addEventListener('click', () => modal.close());
 ligaFecharModais(modal);
 
@@ -76,6 +100,10 @@ form.addEventListener('submit', async (e) => {
     email: document.getElementById('email').value.trim() || null,
     telefone: document.getElementById('telefone').value.trim() || null,
     formacao: document.getElementById('formacao').value.trim() || null,
+    cep: document.getElementById('cep').value.trim() || null,
+    endereco: document.getElementById('endereco').value.trim() || null,
+    bairro: document.getElementById('bairro').value.trim() || null,
+    cidade: document.getElementById('cidade').value.trim() || null,
     ativo: document.getElementById('ativo').checked,
   };
   if (!dados.nome) {

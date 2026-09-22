@@ -21,3 +21,22 @@ export function ligaFecharModais(modal) {
     el.addEventListener('click', () => modal.close());
   }
 }
+
+export async function buscarCep(cepInput) {
+  const digitos = (cepInput.value || '').replace(/\D/g, '').slice(0, 8);
+  cepInput.value = digitos ? digitos.replace(/^(\d{5})(\d{3})$/, '$1-$2') : '';
+  if (digitos.length !== 8) return null;
+  try {
+    const r = await fetch('https://viacep.com.br/ws/' + digitos + '/json/');
+    const j = await r.json();
+    if (j.erro) return null;
+    return {
+      endereco: j.logradouro || '',
+      bairro: j.bairro || '',
+      cidade: j.localidade || '',
+      uf: j.uf || '',
+    };
+  } catch {
+    return null;
+  }
+}

@@ -67,6 +67,9 @@ h3 { font-size: 1.05rem; }
   margin-bottom: 0.9rem;
 }
 .grid2 label, .grid3 label { margin-bottom: 0; }
+.cep-row { display: flex; gap: 0.6rem; align-items: flex-end; }
+.cep-row label.field { flex: 1; margin-bottom: 0; }
+.cep-row .btn { height: 2.62rem; margin-bottom: 0; white-space: nowrap; }
 label.field .hint { font-size: 0.75rem; font-weight: 400; color: var(--texto2); }
 label.check {
   flex-direction: row;

@@ -32,7 +32,7 @@
     <div class="tabela-wrap">
       <table class="tabela">
         <thead>
-          <tr><th>Nome</th><th>Instrumento</th><th>E-mail</th><th>Telefone</th><th>Status</th><th>Ações</th></tr>
+          <tr><th>Nome</th><th>Instrumento</th><th>E-mail</th><th>Telefone</th><th>Cidade</th><th>Status</th><th>Ações</th></tr>
         </thead>
         <tbody id="tbody"></tbody>
       </table>
@@ -51,6 +51,20 @@
           <label class="field">E-mail <input type="email" id="email"></label>
           <label class="field">Telefone <input type="tel" id="telefone"></label>
           <label class="field">Formação <input type="text" id="formacao"></label>
+
+          <div class="form-section">Endereço</div>
+          <div class="cep-row">
+            <label class="field">CEP
+              <input type="text" id="cep" maxlength="9" placeholder="00000-000">
+            </label>
+            <button type="button" class="btn ghost" id="buscar-cep">Buscar CEP</button>
+          </div>
+          <label class="field">Endereço <input type="text" id="endereco"></label>
+          <div class="grid2">
+            <label class="field">Bairro <input type="text" id="bairro"></label>
+            <label class="field">Cidade <input type="text" id="cidade"></label>
+          </div>
+
           <label class="check">
             <input type="checkbox" id="ativo" checked> Ativo
           </label>
