@@ -159,16 +159,18 @@
   .corte { display: none; }
   .carne-intro { display: none; }
   .carne-linha {
-    grid-template-columns: 52mm 52mm;
-    justify-content: space-between;
+    grid-template-columns: 1fr 1fr;
     gap: 4mm;
-    height: 54mm;
+    height: 52mm;
     padding: 0;
     margin: 0 0 2mm;
     border-bottom: 1px dashed #94a3b8;
   }
   .carne-linha:last-child { border-bottom: 0; }
-  .canhoto { height: 52mm; margin: 0; }
+  .canhoto { height: 49mm; margin: 0; font-size: 0.75rem; }
+  .canhoto .cn-valor { font-size: 1.35rem; }
+  .canhoto .cn-recebi { font-size: 0.68rem; }
+  .canhoto .cn-ass span { font-size: 0.64rem; }
   .carne-linha:nth-child(5n+1) { page-break-before: always; }
   .carne-linha:first-child { page-break-before: avoid; }
 }
