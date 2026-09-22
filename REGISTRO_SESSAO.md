@@ -196,20 +196,37 @@ Motivo: forma dos formulários e falta de dashboard na home. Baseado em pesquisa
 
 ---
 
-## 11. Estado atual do projeto
+## 11. Etapa 7 — Relatórios (gráficos) (implementada)
+
+Nova página **Relatórios** (`public/relatorios.html` + `public/js/relatorios.js`), consumindo as views `vw_*` do SCHEMA.sql, com gráficos **SVG puros sem dependência** (`public/js/graficos.js`): linha (com área) e barras agrupadas, grid e eixos montados à mão.
+
+- **Desempenho da turma** — evolução média % por aula (`vw_desempenho_turma`), seletor de turma ativa
+- **Desempenho por aluno** — avaliações por data (`vw_desempenho_aluno`), seletor de aluno ativo
+- **Financeiro por competência** — a receber × recebido por mês (`vw_financeiro_resumo`), **admin only** (seção oculta p/ professor)
+- Link `Relatórios` desbloqueado (era `data-futuro`) em **todas as páginas**
+
+**CSS:** `.grafico-card`, `.graf-head`, `.graf-sel`, `.grafico` (svg), `.graf-vazio`, `.graf-legend`.
+
+**Seed de teste (auxiliar):** `SEED_TESTE.sql` — 10 professores, 10 turmas (1 por instrumento), 30 alunos (5 menores com responsável), 30 matrículas (turma/individual; parcelado 1/6/12x, mensal, avulsa) + parcelas do carnê injetadas direto em `financeiro`. Idempotente. Inclui relaxamento da constraint `matriculas_check2` (turma agora aceita `parcelado`, não só `mensal`) — **aplicado** pelo usuário; seed validado com sucesso.
+
+---
+
+## 12. Estado atual do projeto
 
 Repositório: https://github.com/AdaoElias/escola-de-musica
 Site: https://escola-demusica.netlify.app
-Banco: Supabase (tabelas do SCHEMA.sql + migration RLS aplicadas)
+Banco: Supabase (tabelas do SCHEMA.sql + migrations ETAPA2/REDESIGN/FIX_RLS/ENDERECO/CPF_NASCIMENTO/**ETAPA5/ETAPA6** aplicadas; ETAPA4 pendente)
 
 ```
-public/            → index(login), app(painel/dashboard), professores, alunos, turmas, matriculas, grade, aulas, financeiro, carne (impressão)
-public/js/         → supabase.js, auth.js, ui.js, app.js, professores.js, alunos.js, turmas.js, matriculas.js, grade.js, aulas.js, financeiro.js, carne.js, instrumentos.js
+public/            → index(login), app(painel/dashboard), professores, alunos, turmas, matriculas, grade, aulas, financeiro, relatorios, carne (impressão)
+public/js/         → supabase.js, auth.js, ui.js, app.js, professores.js, alunos.js, turmas.js, matriculas.js, grade.js, aulas.js, financeiro.js, relatorios.js, graficos.js (svg), carne.js, instrumentos.js
 public/css/style.css (design system claro) + imprimir.css (recibo/carnê A4)
 functions/         → hello.js, health.js, client-config.js
 netlify.toml, .env.example, .env.local (não versionado)
-REQUISITOS.md, SCHEMA.sql, MIGRACAO_ETAPA2.sql, MIGRACAO_ETAPA4.sql, MIGRACAO_ETAPA5.sql, MIGRACAO_ETAPA6.sql, MIGRACAO_ENDERECO.sql, MIGRACAO_CPF_NASCIMENTO.sql, MIGRACAO_FIX_RLS.sql
+REQUISITOS.md, SCHEMA.sql, MIGRACAO_ETAPA2/4/5/6.sql, MIGRACAO_ENDERECO.sql, MIGRACAO_CPF_NASCIMENTO.sql, MIGRACAO_FIX_RLS.sql, SEED_TESTE.sql
 ```
+
+**Migrações ETAPA5 e ETAPA6 já aplicadas** no Supabase (usuário confirmou). **ETAPA4 ainda pendente.**
 
 **FIX (a aplicar no Supabase):** `MIGRACAO_FIX_RLS.sql` — funções `usuario_atual/administrador_atual/professor_atual` agora são `SECURITY DEFINER`. Sem isso, todo CRUD/logado estoura "stack depth limit exceeded" (recursão de RLS: função lê usuarios/professores → política da própria tabela chama a função de novo).
 
@@ -219,22 +236,21 @@ REQUISITOS.md, SCHEMA.sql, MIGRACAO_ETAPA2.sql, MIGRACAO_ETAPA4.sql, MIGRACAO_ET
 
 ---
 
-## 12. Próximos passos
+## 13. Próximos passos
 
 - ✅ **Etapa 0** requesitos/diagrama
 - ✅ **Etapa 1** ambiente (GitHub/Supabase/Netlify)
 - ✅ **Etapa 2** login + RLS + professores
 - ✅ **Etapa 3** alunos + turmas + matrículas
 - ✅ **Etapa 4** grade + aulas + progresso/desempenho (falta aplicar MIGRACAO_ETAPA4.sql)
-- ✅ **Redesign** dashboard + base de design (Etapa 4.5) — Etapas 5/6 devem usar `.kpi/.alert/.badge/.toast/modal` já existentes
-- ✅ **Etapa 5** Financeiro (mensal via RPC + avulsa automática ao lançar aula) + inadimplência (KPIs) — **falta aplicar MIGRACAO_ETAPA5.sql**
-- ✅ **Etapa 6** Recibo de matrícula + Carnê 1/6/12x (2 vias) + responsável p/ menor — **falta aplicar MIGRACAO_ETAPA6.sql** (após ETAPA5)
-- ⏭️ **Etapa 7** Gráficos: desempenho da turma, por aluno, financeiro (views `vw_*` já prontas no SCHEMA.sql)
+- ✅ **Redesign** dashboard + base de design (Etapa 4.5)
+- ✅ **Etapa 5** Financeiro (mensal via RPC + avulsa automática ao lançar aula) — **aplicada**
+- ✅ **Etapa 6** Recibo de matrícula + Carnê 1/6/12x (2 vias) + responsável p/ menor — **aplicada** (constraint `matriculas_check2` relaxada via seed)
+- ✅ **Etapa 7** Relatórios com gráficos SVG (desempenho turma/aluno + financeiro) — página nova no menu
 
 **Pendências anotadas:**
-- ⚠️ Aplicar `MIGRACAO_ETAPA5.sql` no Supabase (financeiro: RPC + triggers) — necessário para o módulo funcionar
-- ⚠️ Aplicar `MIGRACAO_ETAPA6.sql` no Supabase (recibo + carnê: campos, enums, RPC `gerar_carne`, trigger de matrícula) — **despois da ETAPA5**
-- ⚠️ Aplicar `MIGRACAO_ETAPA4.sql` no Supabase (views de progresso)
+- ⚠️ Aplicar `MIGRACAO_ETAPA4.sql` no Supabase (views de progresso `vw_progresso_turma/vw_progresso_aluno`)
+- ⚠️ O relaxamento da constraint de turma (permitir `parcelado`) foi feito dentro do `SEED_TESTE.sql`; ideal refletir também no `SCHEMA.sql` (baseline) − `CHECK (tipo <> 'turma' OR tipo_pagamento::text IN ('mensal','parcelado'))`
 - Excluir/ajustar conta `teste@escola.com` e criar e-mail definitivo de admin (ou manter, se preferir)
 - Avaliar liberação: professor acessa só com conta vinculada (`professores.usuario_id`)
-- Views `vw_desempenho_turma/vw_desempenho_aluno/vw_financeiro_resumo/vw_inadimplentes` já existem no banco → consumir na Etapa 7
+- Verificar visual dos gráficos com dados reais do seed (o seed não insere `conteudos_ministrados`/`desempenhos`; gráficos de desempenho ficam vazios até lançar aulas)

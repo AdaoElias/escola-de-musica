@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatórios — Escola de Música</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/app.html"><span class="brand-icon">♪</span> Escola de Música</a>
+    <nav class="menu">
+      <a href="/app.html">Início</a>
+      <a href="/professores.html">Professores</a>
+      <a href="/alunos.html">Alunos</a>
+      <a href="/turmas.html">Turmas</a>
+      <a href="/matriculas.html">Matrículas</a>
+      <a href="/grade.html">Grade</a>
+      <a href="/aulas.html">Aulas</a>
+      <a href="/financeiro.html">Financeiro</a>
+      <a href="/relatorios.html" class="ativo">Relatórios</a>
+    </nav>
+    <button id="sair" class="link">Sair</button>
+  </header>
+
+  <main class="wrap">
+    <div class="page-head">
+      <h2>Relatórios</h2>
+      <p class="sub">Desempenho e financeiro em gráficos (Etapa 7)</p>
+    </div>
+
+    <section class="card grafico-card">
+      <div class="graf-head">
+        <div>
+          <h4>Desempenho da turma</h4>
+          <p class="sub">Evolução média (%) lançada a cada aula</p>
+        </div>
+        <select id="sel-turma" class="graf-sel"></select>
+      </div>
+      <div class="graf" id="graf-turma"></div>
+    </section>
+
+    <section class="card grafico-card">
+      <div class="graf-head">
+        <div>
+          <h4>Desempenho por aluno</h4>
+          <p class="sub">Avaliações por aula (individual ou dentro da turma)</p>
+        </div>
+        <select id="sel-aluno" class="graf-sel"></select>
+      </div>
+      <div class="graf" id="graf-aluno"></div>
+    </section>
+
+    <section class="card grafico-card" id="sec-fin">
+      <div class="graf-head">
+        <div>
+          <h4>Financeiro por competência</h4>
+          <p class="sub">A receber × recebido por mês</p>
+        </div>
+      </div>
+      <div class="graf" id="graf-fin"></div>
+    </section>
+  </main>
+
+  <script type="module" src="/js/relatorios.js"></script>
+</body>
+</html>

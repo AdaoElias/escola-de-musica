@@ -385,6 +385,20 @@ button.x:hover { background: var(--bg-card); color: var(--texto); }
 .recentes li:last-child { border-bottom: 0; }
 .recentes li span { color: var(--texto2); font-size: 0.8rem; white-space: nowrap; }
 
+/* ---------- Relatórios / gráficos ---------- */
+.grafico-card { margin-bottom: 1rem; padding: 1.2rem 1.4rem; max-width: none; }
+.graf-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.graf-head h4 { margin: 0 0 0.15rem; font-size: 0.95rem; }
+.graf-head .sub { margin: 0; font-size: 0.8rem; }
+.graf-sel { max-width: 16rem; min-width: 10rem; }
+.grafico { display: block; max-width: 100%; height: auto; }
+.grafico .g-reeb { stroke: var(--borda); stroke-width: 1; }
+.grafico text { font-size: 11px; fill: var(--texto2); }
+.graf-vazio { color: var(--texto2); text-align: center; padding: 2.5rem 1rem; font-size: 0.9rem; }
+.graf-legend { display: flex; gap: 1rem; margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--texto2); flex-wrap: wrap; }
+.graf-legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.graf-legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
 /* ---------- Responsivo ---------- */
 .tabela-wrap { overflow-x: auto; }
 @media (max-width: 768px) {
