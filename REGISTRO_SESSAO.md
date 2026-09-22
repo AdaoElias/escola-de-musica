@@ -250,7 +250,7 @@ REQUISITOS.md, SCHEMA.sql, MIGRACAO_ETAPA2/4/5/6.sql, MIGRACAO_ENDERECO.sql, MIG
 
 **Pendências anotadas:**
 - ⚠️ Aplicar `MIGRACAO_ETAPA4.sql` no Supabase (views de progresso `vw_progresso_turma/vw_progresso_aluno`)
-- ⚠️ O relaxamento da constraint de turma (permitir `parcelado`) foi feito dentro do `SEED_TESTE.sql`; ideal refletir também no `SCHEMA.sql` (baseline) − `CHECK (tipo <> 'turma' OR tipo_pagamento::text IN ('mensal','parcelado'))`
+- ✅ `SCHEMA.sql` atualizado como baseline do estado ETAPA6: enums `parcelado`/`matricula`, colunas de carnê/responsável/horário, índices únicos parciais e constraint de turma relaxada (`IN ('mensal','parcelado')`)
 - Excluir/ajustar conta `teste@escola.com` e criar e-mail definitivo de admin (ou manter, se preferir)
 - Avaliar liberação: professor acessa só com conta vinculada (`professores.usuario_id`)
 - Verificar visual dos gráficos com dados reais do seed (o seed não insere `conteudos_ministrados`/`desempenhos`; gráficos de desempenho ficam vazios até lançar aulas)

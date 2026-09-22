@@ -6,10 +6,10 @@
 -- ---------- Tipos enumerados ----------
 CREATE TYPE perfil_usuario AS ENUM ('admin', 'professor');
 CREATE TYPE tipo_matricula   AS ENUM ('turma', 'individual');
-CREATE TYPE tipo_pagamento   AS ENUM ('mensal', 'avulsa');
+CREATE TYPE tipo_pagamento   AS ENUM ('mensal', 'avulsa', 'parcelado');
 CREATE TYPE status_matricula AS ENUM ('ativa', 'trancada', 'concluida');
 CREATE TYPE status_turma     AS ENUM ('ativa', 'encerrada');
-CREATE TYPE tipo_lancamento  AS ENUM ('mensalidade', 'aula_avulsa', 'ajuste');
+CREATE TYPE tipo_lancamento  AS ENUM ('mensalidade', 'aula_avulsa', 'ajuste', 'matricula');
 CREATE TYPE status_lancamento AS ENUM ('pendente', 'paga', 'atrasada', 'cancelada');
 CREATE TYPE forma_pagamento  AS ENUM ('pix', 'cartao', 'dinheiro', 'boleto');
 
@@ -60,7 +60,12 @@ CREATE TABLE alunos (
   cep         TEXT,
   observacao  TEXT,
   ativo       BOOLEAN NOT NULL DEFAULT true,
-  criado_em   TIMESTAMPTZ NOT NULL DEFAULT now()
+  criado_em   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- Responsável legal (obrigatório quando aluno é menor de idade)
+  responsavel_nome      TEXT,
+  responsavel_cpf       TEXT,
+  responsavel_telefone  TEXT,
+  parentesco            TEXT    -- pai | mae | tutor | outro
 );
 
 -- Turmas coletivas
@@ -91,6 +96,15 @@ CREATE TABLE matriculas (
   data_fim        DATE,
   observacao      TEXT,
   criado_em       TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- Carnê (parcelado): taxa paga no ato, valor do curso e 1/6/12 parcelas
+  valor_matricula             NUMERIC(10,2) NOT NULL DEFAULT 0,
+  valor_total                 NUMERIC(10,2),
+  parcelas                    SMALLINT CHECK (parcelas IN (1, 6, 12)),
+  dia_vencimento              SMALLINT NOT NULL DEFAULT 5 CHECK (dia_vencimento BETWEEN 1 AND 28),
+  matricula_forma_pagamento   forma_pagamento NOT NULL DEFAULT 'pix',
+  -- Horário fixo (individual / Aluno VIP)
+  dia_semana                  TEXT,
+  horario                     TIME,
   CHECK (
     (tipo = 'turma' AND turma_id IS NOT NULL) OR
     (tipo = 'individual' AND turma_id IS NULL)
@@ -99,7 +113,7 @@ CREATE TABLE matriculas (
     (tipo = 'individual' AND professor_id IS NOT NULL) OR
     (tipo = 'turma' AND professor_id IS NULL)
   ),
-  CHECK (tipo <> 'turma' OR tipo_pagamento::text = 'mensal'),
+  CHECK (tipo <> 'turma' OR tipo_pagamento::text IN ('mensal', 'parcelado')),
   UNIQUE (aluno_id, turma_id, tipo)
 );
 
@@ -173,6 +187,14 @@ CREATE INDEX idx_financeiro_aluno      ON financeiro(aluno_id);
 CREATE INDEX idx_financeiro_status     ON financeiro(status);
 CREATE INDEX idx_financeiro_vencimento ON financeiro(vencimento);
 CREATE INDEX idx_financeiro_competencia ON financeiro(competencia);
+
+-- Unicidade financeiro (Etapa 5/6): 1 mensalidade por matrícula/mês; 1 lançamento por aula avulsa
+CREATE UNIQUE INDEX uq_financeiro_mensalidade
+  ON financeiro (matricula_id, competencia, tipo)
+  WHERE tipo = 'mensalidade';
+CREATE UNIQUE INDEX uq_financeiro_avulsa
+  ON financeiro (conteudo_id)
+  WHERE tipo = 'aula_avulsa';
 
 -- ---------- Views de relatórios ----------
 
