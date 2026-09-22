@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Professores — Escola de Música</title>
+  <title>Grade de Conteúdos — Escola de Música</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -11,11 +11,11 @@
     <a class="brand" href="/app.html"><span class="brand-icon">♪</span> Escola de Música</a>
     <nav class="menu">
       <a href="/app.html">Início</a>
-      <a href="/professores.html" class="ativo">Professores</a>
+      <a href="/professores.html">Professores</a>
       <a href="/alunos.html">Alunos</a>
       <a href="/turmas.html">Turmas</a>
       <a href="/matriculas.html">Matrículas</a>
-      <a href="/grade.html">Grade</a>
+      <a href="/grade.html" class="ativo">Grade</a>
       <a href="/aulas.html">Aulas</a>
       <a href="#" data-futuro>Financeiro</a>
       <a href="#" data-futuro>Relatórios</a>
@@ -25,14 +25,14 @@
 
   <main class="wrap">
     <div class="row">
-      <h2>Professores</h2>
-      <button id="novo" class="btn">+ Novo professor</button>
+      <h2>Grade de Conteúdos</h2>
+      <button id="novo" class="btn">+ Novo item</button>
     </div>
 
     <div class="tabela-wrap">
       <table class="tabela">
         <thead>
-          <tr><th>Nome</th><th>Instrumento</th><th>E-mail</th><th>Telefone</th><th>Status</th><th>Ações</th></tr>
+          <tr><th>Ordem</th><th>Título</th><th>Descrição</th><th>Módulo</th><th>Nível</th><th>Tempo</th><th>Status</th><th>Ações</th></tr>
         </thead>
         <tbody id="tbody"></tbody>
       </table>
@@ -41,16 +41,27 @@
     <dialog id="modal">
       <form id="form" class="form">
         <div class="modal-head">
-          <h3 id="titulo-modal">Novo professor</h3>
+          <h3 id="titulo-modal">Novo item</h3>
           <button type="button" class="x" data-fechar aria-label="Fechar">×</button>
         </div>
         <div class="modal-body">
           <input type="hidden" id="id">
-          <label class="field">Nome <span class="obrigatorio">*</span><input type="text" id="nome" required></label>
-          <label class="field">Instrumento <input type="text" id="instrumento"></label>
-          <label class="field">E-mail <input type="email" id="email"></label>
-          <label class="field">Telefone <input type="tel" id="telefone"></label>
-          <label class="field">Formação <input type="text" id="formacao"></label>
+          <div class="grid2">
+            <label class="field">Ordem <input type="number" id="ordem" min="0" step="1"></label>
+            <label class="field">Tempo estimado (min) <input type="number" id="tempo_estimado" min="0" step="1"></label>
+          </div>
+          <label class="field">Título <span class="obrigatorio">*</span><input type="text" id="titulo" required></label>
+          <label class="field">Descrição <input type="text" id="descricao"></label>
+          <div class="grid2">
+            <label class="field">Módulo <input type="text" id="modulo" placeholder="Ex.: Módulo 1 - Fundamentos"></label>
+            <label class="field">Nível
+              <select id="nivel">
+                <option value="Iniciante">Iniciante</option>
+                <option value="Intermediário">Intermediário</option>
+                <option value="Avançado">Avançado</option>
+              </select>
+            </label>
+          </div>
           <label class="check">
             <input type="checkbox" id="ativo" checked> Ativo
           </label>
@@ -59,13 +70,13 @@
           <p class="error" id="erro"></p>
           <div class="row gap">
             <button type="button" class="btn ghost" id="cancelar">Cancelar</button>
-            <button type="submit" class="btn" id="btn-salvar">Salvar professor</button>
+            <button type="submit" class="btn" id="btn-salvar">Salvar item</button>
           </div>
         </div>
       </form>
     </dialog>
   </main>
 
-  <script type="module" src="/js/professores.js"></script>
+  <script type="module" src="/js/grade.js"></script>
 </body>
 </html>

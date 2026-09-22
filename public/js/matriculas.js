@@ -1,4 +1,5 @@
 import { guard, logout, perfil } from './auth.js';
+import { toast, ligaFecharModais } from './ui.js';
 
 const sb = await guard();
 if (!sb) throw new Error('redirecionado');
@@ -7,6 +8,7 @@ const tbody = document.getElementById('tbody');
 const modal = document.getElementById('modal');
 const form = document.getElementById('form');
 const erro = document.getElementById('erro');
+const salvarBtn = document.getElementById('btn-salvar');
 let editando = null;
 let turmas = [], professores = [];
 
@@ -101,6 +103,9 @@ async function carregar() {
     const vinculo = m.tipo === 'turma'
       ? (m.turma ? m.turma.nome : '—')
       : (m.professor ? m.professor.nome : '—');
+    const statusBadge = m.status === 'ativa'
+      ? '<span class="badge b-ok">Ativa</span>'
+      : (m.status === 'trancada' ? '<span class="badge b-warn">Trancada</span>' : '<span class="badge b-info">Concluída</span>');
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${m.aluno ? m.aluno.nome : '—'}</td>
@@ -108,13 +113,14 @@ async function carregar() {
       <td>${vinculo}</td>
       <td>${m.tipo_pagamento === 'avulsa' ? 'Avulsa' : 'Mensal'}</td>
       <td>${valor}</td>
-      <td>${m.status}</td>
+      <td>${statusBadge}</td>
       <td>${m.data_inicio}</td>
       <td class="acoes">
         <button class="mini" data-editar="${m.id}">Editar</button>
       </td>`;
     tbody.appendChild(tr);
   }
+  if (!data.length) tbody.innerHTML = '<tr><td colspan="8" class="empty">Nenhuma matrícula cadastrada ainda.</td></tr>';
 }
 
 function mostrarErroTabela(msg) {
@@ -125,6 +131,7 @@ function mostrarErroTabela(msg) {
 
 function abrirModal(m = null) {
   erro.textContent = '';
+  salvarBtn.disabled = false;
   editando = m;
   document.getElementById('titulo-modal').textContent = m ? 'Editar matrícula' : 'Nova matrícula';
   document.getElementById('id').value = m ? m.id : '';
@@ -143,10 +150,12 @@ function abrirModal(m = null) {
 
 document.getElementById('novo').addEventListener('click', () => abrirModal());
 document.getElementById('cancelar').addEventListener('click', () => modal.close());
+ligaFecharModais(modal);
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   erro.textContent = '';
+  salvarBtn.disabled = true;
   const tipo = document.getElementById('tipo').value;
   const pagamento = document.getElementById('tipo_pagamento').value;
   const dados = {
@@ -160,7 +169,10 @@ form.addEventListener('submit', async (e) => {
     status: document.getElementById('status_matricula').value,
     data_inicio: document.getElementById('data_inicio').value || new Date().toISOString().slice(0, 10),
   };
-  if (!dados.aluno_id) return;
+  if (!dados.aluno_id) {
+    salvarBtn.disabled = false;
+    return;
+  }
 
   const { error } = editando
     ? await sb.from('matriculas').update(dados).eq('id', editando.id)
@@ -168,9 +180,11 @@ form.addEventListener('submit', async (e) => {
 
   if (error) {
     erro.textContent = 'Erro: ' + error.message;
+    salvarBtn.disabled = false;
     return;
   }
   modal.close();
+  toast(editando ? 'Matrícula atualizada.' : 'Matrícula criada.');
   carregar();
 });
 

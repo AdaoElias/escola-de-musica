@@ -1,4 +1,5 @@
 import { guard, logout, perfil } from './auth.js';
+import { toast, ligaFecharModais } from './ui.js';
 
 const sb = await guard();
 if (!sb) throw new Error('redirecionado');
@@ -7,6 +8,7 @@ const tbody = document.getElementById('tbody');
 const modal = document.getElementById('modal');
 const form = document.getElementById('form');
 const erro = document.getElementById('erro');
+const salvarBtn = document.getElementById('btn-salvar');
 let editando = null;
 
 const me = await perfil(sb);
@@ -27,13 +29,14 @@ async function carregar() {
       <td>${a.nome}</td>
       <td>${a.telefone || '—'}</td>
       <td>${a.email || '—'}</td>
-      <td>${a.ativo ? 'Ativo' : 'Inativo'}</td>
+      <td>${a.ativo ? '<span class="badge b-ok">Ativo</span>' : '<span class="badge b-mut">Inativo</span>'}</td>
       <td class="acoes">
         ${a.ativo ? '<button class="mini" data-editar="' + a.id + '">Editar</button>' : ''}
         ${a.ativo ? '<button class="mini danger" data-inativar="' + a.id + '">Inativar</button>' : ''}
       </td>`;
     tbody.appendChild(tr);
   }
+  if (!data.length) tbody.innerHTML = '<tr><td colspan="5" class="empty">Nenhum aluno cadastrado ainda.</td></tr>';
 }
 
 function mostrarErroTabela(msg) {
@@ -44,6 +47,7 @@ function mostrarErroTabela(msg) {
 
 function abrirModal(aluno = null) {
   erro.textContent = '';
+  salvarBtn.disabled = false;
   editando = aluno;
   document.getElementById('titulo-modal').textContent = aluno ? 'Editar aluno' : 'Novo aluno';
   document.getElementById('id').value = aluno ? aluno.id : '';
@@ -57,10 +61,12 @@ function abrirModal(aluno = null) {
 
 document.getElementById('novo').addEventListener('click', () => abrirModal());
 document.getElementById('cancelar').addEventListener('click', () => modal.close());
+ligaFecharModais(modal);
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   erro.textContent = '';
+  salvarBtn.disabled = true;
   const dados = {
     nome: document.getElementById('nome').value.trim(),
     telefone: document.getElementById('telefone').value.trim() || null,
@@ -68,7 +74,10 @@ form.addEventListener('submit', async (e) => {
     observacao: document.getElementById('observacao').value.trim() || null,
     ativo: document.getElementById('ativo').checked,
   };
-  if (!dados.nome) return;
+  if (!dados.nome) {
+    salvarBtn.disabled = false;
+    return;
+  }
 
   const { error } = editando
     ? await sb.from('alunos').update(dados).eq('id', editando.id)
@@ -76,9 +85,11 @@ form.addEventListener('submit', async (e) => {
 
   if (error) {
     erro.textContent = 'Erro: ' + error.message;
+    salvarBtn.disabled = false;
     return;
   }
   modal.close();
+  toast(editando ? 'Aluno atualizado.' : 'Aluno cadastrado.');
   carregar();
 });
 

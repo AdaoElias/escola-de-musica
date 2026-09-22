@@ -8,14 +8,15 @@
 </head>
 <body>
   <header class="topbar">
-    <strong>Escola de Música</strong>
+    <a class="brand" href="/app.html"><span class="brand-icon">♪</span> Escola de Música</a>
     <nav class="menu">
       <a href="/app.html">Início</a>
       <a href="/professores.html">Professores</a>
       <a href="/alunos.html">Alunos</a>
       <a href="/turmas.html" class="ativo">Turmas</a>
       <a href="/matriculas.html">Matrículas</a>
-      <a href="#" data-futuro>Grade</a>
+      <a href="/grade.html">Grade</a>
+      <a href="/aulas.html">Aulas</a>
       <a href="#" data-futuro>Financeiro</a>
       <a href="#" data-futuro>Relatórios</a>
     </nav>
@@ -28,50 +29,59 @@
       <button id="novo" class="btn">+ Nova turma</button>
     </div>
 
-    <table class="tabela">
-      <thead>
-        <tr><th>Nome</th><th>Instrumento</th><th>Professor</th><th>Dia</th><th>Horário</th><th>Valor mensal</th><th>Status</th><th>Ações</th></tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
+    <div class="tabela-wrap">
+      <table class="tabela">
+        <thead>
+          <tr><th>Nome</th><th>Instrumento</th><th>Professor</th><th>Dia</th><th>Horário</th><th>Valor mensal</th><th>Status</th><th>Ações</th></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
 
     <dialog id="modal">
       <form id="form" class="form">
-        <h3 id="titulo-modal">Nova turma</h3>
-        <input type="hidden" id="id">
-        <div class="grid2">
-          <label>Nome <input type="text" id="nome" required></label>
-          <label>Instrumento <input type="text" id="instrumento"></label>
+        <div class="modal-head">
+          <h3 id="titulo-modal">Nova turma</h3>
+          <button type="button" class="x" data-fechar aria-label="Fechar">×</button>
         </div>
-        <label>Professor <select id="professor_id"></select></label>
-        <div class="grid2">
-          <label>Dia da semana
-            <select id="dia_semana">
-              <option value="Segunda">Segunda</option>
-              <option value="Terça">Terça</option>
-              <option value="Quarta">Quarta</option>
-              <option value="Quinta">Quinta</option>
-              <option value="Sexta">Sexta</option>
-              <option value="Sábado">Sábado</option>
-              <option value="Domingo">Domingo</option>
-            </select>
-          </label>
-          <label>Horário <input type="time" id="horario"></label>
+        <div class="modal-body">
+          <input type="hidden" id="id">
+          <div class="grid2">
+            <label class="field">Nome <span class="obrigatorio">*</span><input type="text" id="nome" required></label>
+            <label class="field">Instrumento <input type="text" id="instrumento"></label>
+          </div>
+          <label class="field">Professor <select id="professor_id"></select></label>
+          <div class="grid2">
+            <label class="field">Dia da semana
+              <select id="dia_semana">
+                <option value="Segunda">Segunda</option>
+                <option value="Terça">Terça</option>
+                <option value="Quarta">Quarta</option>
+                <option value="Quinta">Quinta</option>
+                <option value="Sexta">Sexta</option>
+                <option value="Sábado">Sábado</option>
+                <option value="Domingo">Domingo</option>
+              </select>
+            </label>
+            <label class="field">Horário <input type="time" id="horario"></label>
+          </div>
+          <div class="grid2">
+            <label class="field">Valor mensal (R$) <input type="number" id="valor_mensal" min="0" step="0.01"></label>
+            <label class="field">Status
+              <select id="status">
+                <option value="ativa">Ativa</option>
+                <option value="encerrada">Encerrada</option>
+              </select>
+            </label>
+          </div>
         </div>
-        <div class="grid2">
-          <label>Valor mensal (R$) <input type="number" id="valor_mensal" min="0" step="0.01"></label>
-          <label>Status
-            <select id="status">
-              <option value="ativa">Ativa</option>
-              <option value="encerrada">Encerrada</option>
-            </select>
-          </label>
+        <div class="modal-foot">
+          <p class="error" id="erro"></p>
+          <div class="row gap">
+            <button type="button" class="btn ghost" id="cancelar">Cancelar</button>
+            <button type="submit" class="btn" id="btn-salvar">Salvar turma</button>
+          </div>
         </div>
-        <div class="row gap">
-          <button type="submit" class="btn">Salvar</button>
-          <button type="button" class="btn ghost" id="cancelar">Cancelar</button>
-        </div>
-        <p class="error" id="erro"></p>
       </form>
     </dialog>
   </main>

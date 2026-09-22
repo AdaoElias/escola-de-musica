@@ -101,36 +101,86 @@ Páginas novas (CRUD completos no menu):
 
 ---
 
-## 7. Estado atual do projeto
+## 7. Etapa 4 — Grade, Aulas e Progresso (concluída)
+
+**Páginas novas:**
+- **Grade de Conteúdos** — `public/grade.html` + `public/js/grade.js`
+  - CRUD da grade padrão (ordem, título, descrição, módulo, nível, tempo estimado em minutos, ativo)
+  - Admin cria/edita/exclui; professor só visualiza (permite lançar aulas referenciando a grade)
+- **Aulas** — `public/aulas.html` + `public/js/aulas.js`
+  - Lançamento de aula para **turma** ou **matrícula individual** (título/descrição, item da grade opcional, evolução da turma %)
+  - Professor responsável é preenchido automaticamente em cada tipo
+  - Desempenho por aluno dentro da turma (botão **Avaliar**) e desempenho inline na aula individual (RF21)
+  - Seção **Progresso da grade** consumindo as views (ministrados vs. total, com barra) (RF22)
+
+**Banco:** `MIGRACAO_ETAPA4.sql` → ajustes **NÃO aplicados ainda**:
+- `vw_progresso_turma` e `vw_progresso_aluno` (percentual da grade por turma/matrícula individual)
+- ⚠️ **Executar `MIGRACAO_ETAPA4.sql` no Supabase > SQL Editor** para a seção de progresso funcionar
+- Tabelas `grade_conteudos`, `conteudos_ministrados`, `desempenhos` e suas RLS já existiam (SCHEMA.sql + MIGRACAO_ETAPA2.sql), nada a aplicar nesses pontos
+
+**Menus atualizados:** `Grade` e `Aulas` viraram links reais em todas as páginas; tile no painel atualizado.
+
+**Notas para teste:**
+- Professor vinculado a turma/matrícula consegue lançar aulas nelas (RLS `cm_insert`/`desempenhos_insert`)
+- Evolução e desempenho são 0–100 (RN05)
+- Ao lançar aula individual, o campo desempenho/avaliação grava em `desempenhos` (upsert por `aluno_id,conteudo_id`)
+
+---
+
+## 8. Redesign — Dashboard + base de design (nova)
+
+Motivo: forma dos formulários e falta de dashboard na home. Baseado em pesquisa de boas práticas (NN/g, UX Collective): coluna única, labels acima, validação com feedback, KPIs no topo, alertas de atenção, cor = estado.
+
+**Dashboard (`app.html`/`app.js`)**
+- KPIs no topo: Alunos ativos, Professores ativos, Turmas ativas, Matrículas ativas (mais grandes)
+- Admin vê ainda: **A receber no mês** e **Inadimplentes** (consome `vw_financeiro_resumo` e `vw_inadimplentes`)
+- Bloco **Precisa de atenção**: turmas sem aulas, aulas sem item da grade, matrículas fora de atividade, alunos inativos, inadimplentes (detalhe por aluno)
+- Ações rápidas + listas recentes (últimos alunos, últimas aulas)
+
+**Base de design (reutilizável nas Etapas 5/6)**
+- `public/css/style.css` reescrito: tema claro, tokens (cores/raio/sombra) e componentes:
+  `.kpi`, `.alert` (info/warning/danger/ok), `.badge` (status), `.toast`, modal com
+  `.modal-head/.modal-body/.modal-foot`, `.form-section`, botões `.mini`, `.tabela-wrap`
+- `public/js/ui.js` novo → `toast(msg)` e `ligaFecharModais(modal)`
+- Todos os CRUDs atualizados para o padrão: modal com header/fechar/rodapé, botão de salvar com loading (desabilita durante salvar), toast de sucesso, badges de status na tabela, campos em coluna única/agrupados
+- Login com card claro + logo
+
+**Nota:** MIGRACAO_ETAPA4.sql continua pendente de aplicar (não bloqueia o dashboard).
+
+---
+
+## 9. Estado atual do projeto
 
 Repositório: https://github.com/AdaoElias/escola-de-musica
 Site: https://escola-demusica.netlify.app
 Banco: Supabase (tabelas do SCHEMA.sql + migration RLS aplicadas)
 
 ```
-public/            → index(login), app(painel), professores, alunos, turmas, matriculas
-public/js/         → supabase.js, auth.js, professores.js, alunos.js, turmas.js, matriculas.js
-public/css/style.css
+public/            → index(login), app(painel/dashboard), professores, alunos, turmas, matriculas, grade, aulas
+public/js/         → supabase.js, auth.js, ui.js, app.js, professores.js, alunos.js, turmas.js, matriculas.js, grade.js, aulas.js
+public/css/style.css (design system claro)
 functions/         → hello.js, health.js, client-config.js
 netlify.toml, .env.example, .env.local (não versionado)
-REQUISITOS.md, SCHEMA.sql, MIGRACAO_ETAPA2.sql
+REQUISITOS.md, SCHEMA.sql, MIGRACAO_ETAPA2.sql, MIGRACAO_ETAPA4.sql
 ```
 
 **Conta de teste ativa:** `teste@escola.com` (admin). Sugestão: trocar pela conta definitiva.
 
 ---
 
-## 8. Próximos passos
+## 10. Próximos passos
 
 - ✅ **Etapa 0** requesitos/diagrama
 - ✅ **Etapa 1** ambiente (GitHub/Supabase/Netlify)
 - ✅ **Etapa 2** login + RLS + professores
 - ✅ **Etapa 3** alunos + turmas + matrículas
-- ⏭️ **Etapa 4** Grade de conteúdos (`grade_conteudos`) + lançamento de aulas (`conteudos_ministrados`) por turma/individual com progresso e evolução (%), desempenho por aluno (`desempenhos`)
+- ✅ **Etapa 4** grade + aulas + progresso/desempenho (falta aplicar MIGRACAO_ETAPA4.sql)
+- ✅ **Redesign** dashboard + base de design (Etapa 4.5) — Etapas 5/6 devem usar `.kpi/.alert/.badge/.toast/modal` já existentes
 - ⏭️ **Etapa 5** Financeiro (mensal primeiro; avulsa = geração automática ao lançar aula) + inadimplência
 - ⏭️ **Etapa 6** Gráficos: desempenho da turma, por aluno, financeiro (views `vw_*` já prontas no SCHEMA.sql)
 
 **Pendências anotadas:**
+- ⚠️ Aplicar `MIGRACAO_ETAPA4.sql` no Supabase (views de progresso)
 - Excluir/ajustar conta `teste@escola.com` e criar e-mail definitivo de admin (ou manter, se preferir)
 - Avaliar liberação: professor acessa só com conta vinculada (`professores.usuario_id`)
 - Views `vw_desempenho_turma/vw_desempenho_aluno/vw_financeiro_resumo/vw_inadimplentes` já existem no banco → consumir na Etapa 6

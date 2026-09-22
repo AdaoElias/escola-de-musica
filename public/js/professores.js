@@ -1,4 +1,5 @@
 import { guard, logout, perfil } from './auth.js';
+import { toast, ligaFecharModais } from './ui.js';
 
 const sb = await guard();
 if (!sb) throw new Error('redirecionado');
@@ -7,6 +8,7 @@ const tbody = document.getElementById('tbody');
 const modal = document.getElementById('modal');
 const form = document.getElementById('form');
 const erro = document.getElementById('erro');
+const salvarBtn = document.getElementById('btn-salvar');
 let editando = null;
 
 const me = await perfil(sb);
@@ -27,12 +29,15 @@ async function carregar() {
       <td>${p.instrumento || '—'}</td>
       <td>${p.email || '—'}</td>
       <td>${p.telefone || '—'}</td>
-      <td>${p.ativo ? 'Ativo' : 'Inativo'}</td>
+      <td>${p.ativo ? '<span class="badge b-ok">Ativo</span>' : '<span class="badge b-mut">Inativo</span>'}</td>
       <td class="acoes">
         ${p.ativo ? '<button class="mini" data-editar="' + p.id + '">Editar</button>' : ''}
         ${p.ativo ? '<button class="mini danger" data-inativar="' + p.id + '">Inativar</button>' : ''}
       </td>`;
     tbody.appendChild(tr);
+  }
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum professor cadastrado ainda.</td></tr>';
   }
 }
 
@@ -44,6 +49,7 @@ function mostrarErroTabela(msg) {
 
 function abrirModal(prof = null) {
   erro.textContent = '';
+  salvarBtn.disabled = false;
   editando = prof;
   document.getElementById('titulo-modal').textContent = prof ? 'Editar professor' : 'Novo professor';
   document.getElementById('id').value = prof ? prof.id : '';
@@ -58,10 +64,12 @@ function abrirModal(prof = null) {
 
 document.getElementById('novo').addEventListener('click', () => abrirModal());
 document.getElementById('cancelar').addEventListener('click', () => modal.close());
+ligaFecharModais(modal);
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   erro.textContent = '';
+  salvarBtn.disabled = true;
   const dados = {
     nome: document.getElementById('nome').value.trim(),
     instrumento: document.getElementById('instrumento').value.trim() || null,
@@ -70,7 +78,10 @@ form.addEventListener('submit', async (e) => {
     formacao: document.getElementById('formacao').value.trim() || null,
     ativo: document.getElementById('ativo').checked,
   };
-  if (!dados.nome) return;
+  if (!dados.nome) {
+    salvarBtn.disabled = false;
+    return;
+  }
 
   const { error } = editando
     ? await sb.from('professores').update(dados).eq('id', editando.id)
@@ -78,9 +89,11 @@ form.addEventListener('submit', async (e) => {
 
   if (error) {
     erro.textContent = 'Erro: ' + error.message;
+    salvarBtn.disabled = false;
     return;
   }
   modal.close();
+  toast(editando ? 'Professor atualizado.' : 'Professor cadastrado.');
   carregar();
 });
 

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aulas — Escola de Música</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/app.html"><span class="brand-icon">♪</span> Escola de Música</a>
+    <nav class="menu">
+      <a href="/app.html">Início</a>
+      <a href="/professores.html">Professores</a>
+      <a href="/alunos.html">Alunos</a>
+      <a href="/turmas.html">Turmas</a>
+      <a href="/matriculas.html">Matrículas</a>
+      <a href="/grade.html">Grade</a>
+      <a href="/aulas.html" class="ativo">Aulas</a>
+      <a href="#" data-futuro>Financeiro</a>
+      <a href="#" data-futuro>Relatórios</a>
+    </nav>
+    <button id="sair" class="link">Sair</button>
+  </header>
+
+  <main class="wrap">
+    <div class="row">
+      <h2>Aulas e Conteúdos</h2>
+      <button id="novo" class="btn">+ Lançar aula</button>
+    </div>
+
+    <h3 class="sub">Progresso da grade</h3>
+    <div class="tabela-wrap">
+      <table class="tabela" id="tabela-progresso">
+        <thead><tr><th>Turma / Aluno</th><th>Progresso</th></tr></thead>
+        <tbody id="tbody-progresso"></tbody>
+      </table>
+    </div>
+
+    <div style="height:1.5rem"></div>
+
+    <h3 class="sub">Aulas lançadas</h3>
+    <div class="tabela-wrap">
+      <table class="tabela">
+        <thead>
+          <tr><th>Data</th><th>Turma / Aluno</th><th>Professor</th><th>Conteúdo</th><th>Evolução</th><th>Desempenho</th><th>Ações</th></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <dialog id="modal">
+      <form id="form" class="form">
+        <div class="modal-head">
+          <h3 id="titulo-modal">Lançar aula</h3>
+          <button type="button" class="x" data-fechar aria-label="Fechar">×</button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="id">
+          <div class="form-section">Onde</div>
+          <div class="grid2">
+            <label class="field">Tipo
+              <select id="tipo">
+                <option value="turma">Turma</option>
+                <option value="individual">Individual</option>
+              </select>
+            </label>
+            <label class="field" id="campo-turma">Turma <select id="turma_id"></select></label>
+            <label class="field" id="campo-matricula" style="display:none">Aluno (individual) <select id="matricula_id"></select></label>
+          </div>
+          <label class="field" id="campo-professor">Professor responsável <input type="text" id="professor_display" readonly></label>
+          <div class="form-section">Aula</div>
+          <label class="field">Data da aula <input type="date" id="data_aula"></label>
+          <label class="field">Item da grade
+            <select id="grade_id">
+              <option value="">— Conteúdo livre —</option>
+            </select>
+          </label>
+          <label class="field">Título da aula <span class="obrigatorio">*</span><input type="text" id="titulo" required></label>
+          <label class="field">Descrição <input type="text" id="descricao"></label>
+          <div class="grid2">
+            <label class="field">Evolução da turma (%) <input type="number" id="evolucao_turma" min="0" max="100" step="0.01"></label>
+            <label class="field">Observações <input type="text" id="observacoes"></label>
+          </div>
+          <div class="grid2" id="campo-desempenho" style="display:none">
+            <label class="field">Desempenho do aluno (%) <input type="number" id="desempenho" min="0" max="100" step="0.01"></label>
+            <label class="field">Avaliação <input type="text" id="avaliacao"></label>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <p class="error" id="erro"></p>
+          <div class="row gap">
+            <button type="button" class="btn ghost" id="cancelar">Cancelar</button>
+            <button type="submit" class="btn" id="btn-salvar">Salvar aula</button>
+          </div>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="modal-avaliar">
+      <div class="modal-head">
+        <h3 id="avaliar-titulo">Avaliar alunos</h3>
+        <button type="button" class="x" data-fechar-avaliar aria-label="Fechar">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="avaliar-corpo" class="form"></div>
+      </div>
+      <div class="modal-foot">
+        <p class="error" id="erro-avaliar"></p>
+        <div class="row gap">
+          <button type="button" class="btn ghost" id="fechar-avaliar">Cancelar</button>
+          <button type="button" class="btn" id="salvar-avaliacoes">Salvar avaliações</button>
+        </div>
+      </div>
+    </dialog>
+  </main>
+
+  <script type="module" src="/js/aulas.js"></script>
+</body>
+</html>

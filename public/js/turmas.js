@@ -1,4 +1,5 @@
 import { guard, logout, perfil } from './auth.js';
+import { toast, ligaFecharModais } from './ui.js';
 
 const sb = await guard();
 if (!sb) throw new Error('redirecionado');
@@ -7,6 +8,7 @@ const tbody = document.getElementById('tbody');
 const modal = document.getElementById('modal');
 const form = document.getElementById('form');
 const erro = document.getElementById('erro');
+const salvarBtn = document.getElementById('btn-salvar');
 let editando = null;
 let professores = [];
 
@@ -45,13 +47,14 @@ async function carregar() {
       <td>${t.dia_semana || '—'}</td>
       <td>${hora}</td>
       <td>R$ ${Number(t.valor_mensal).toFixed(2)}</td>
-      <td>${t.status === 'ativa' ? 'Ativa' : 'Encerrada'}</td>
+      <td>${t.status === 'ativa' ? '<span class="badge b-ok">Ativa</span>' : '<span class="badge b-mut">Encerrada</span>'}</td>
       <td class="acoes">
         <button class="mini" data-editar="${t.id}">Editar</button>
         ${t.status === 'ativa' ? '<button class="mini danger" data-encerrar="' + t.id + '">Encerrar</button>' : ''}
       </td>`;
     tbody.appendChild(tr);
   }
+  if (!data.length) tbody.innerHTML = '<tr><td colspan="8" class="empty">Nenhuma turma cadastrada ainda.</td></tr>';
 }
 
 function mostrarErroTabela(msg) {
@@ -62,6 +65,7 @@ function mostrarErroTabela(msg) {
 
 function abrirModal(turma = null) {
   erro.textContent = '';
+  salvarBtn.disabled = false;
   editando = turma;
   document.getElementById('titulo-modal').textContent = turma ? 'Editar turma' : 'Nova turma';
   document.getElementById('id').value = turma ? turma.id : '';
@@ -77,10 +81,12 @@ function abrirModal(turma = null) {
 
 document.getElementById('novo').addEventListener('click', () => abrirModal());
 document.getElementById('cancelar').addEventListener('click', () => modal.close());
+ligaFecharModais(modal);
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   erro.textContent = '';
+  salvarBtn.disabled = true;
   const horario = document.getElementById('horario').value;
   const dados = {
     nome: document.getElementById('nome').value.trim(),
@@ -91,7 +97,10 @@ form.addEventListener('submit', async (e) => {
     valor_mensal: Number(document.getElementById('valor_mensal').value || 0),
     status: document.getElementById('status').value,
   };
-  if (!dados.nome) return;
+  if (!dados.nome) {
+    salvarBtn.disabled = false;
+    return;
+  }
 
   const { error } = editando
     ? await sb.from('turmas').update(dados).eq('id', editando.id)
@@ -99,9 +108,11 @@ form.addEventListener('submit', async (e) => {
 
   if (error) {
     erro.textContent = 'Erro: ' + error.message;
+    salvarBtn.disabled = false;
     return;
   }
   modal.close();
+  toast(editando ? 'Turma atualizada.' : 'Turma criada.');
   carregar();
 });
 
