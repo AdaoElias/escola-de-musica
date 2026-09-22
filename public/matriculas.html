@@ -59,16 +59,53 @@
               <select id="tipo_pagamento">
                 <option value="mensal">Mensal</option>
                 <option value="avulsa">Avulsa (por aula)</option>
+                <option value="parcelado">Parcelado (carnê 1/6/12x)</option>
               </select>
             </label>
           </div>
           <label class="field" id="campo-turma">Turma <span class="obrigatorio">*</span><select id="turma_id"></select></label>
           <label class="field" id="campo-professor" style="display:none">Professor <span class="obrigatorio">*</span><select id="professor_id"></select></label>
-          <div class="form-section">Valores</div>
+
+          <div class="form-section">Horário fixo (individual / Aluno VIP)</div>
+          <div class="grid2" id="campo-horario" style="display:none">
+            <label class="field">Dia da semana
+              <select id="dia_semana">
+                <option value="segunda">Segunda-feira</option>
+                <option value="terca">Terça-feira</option>
+                <option value="quarta">Quarta-feira</option>
+                <option value="quinta">Quinta-feira</option>
+                <option value="sexta">Sexta-feira</option>
+                <option value="sabado">Sábado</option>
+              </select>
+            </label>
+            <label class="field">Horário <input type="time" id="horario"></label>
+          </div>
+
+          <div class="form-section">Cobrança</div>
           <div class="grid2">
-            <label class="field" id="campo-valor-mensal">Valor mensal (R$) <input type="number" id="valor_mensal" min="0" step="0.01"></label>
+            <label class="field">Taxa de matrícula (R$, paga no ato) <input type="number" id="valor_matricula" min="0" step="0.01"></label>
+            <label class="field">Forma de pagamento da matrícula
+              <select id="matricula_forma_pagamento">
+                <option value="pix">PIX</option>
+                <option value="dinheiro">Dinheiro</option>
+                <option value="cartao">Cartão</option>
+                <option value="boleto">Boleto</option>
+              </select>
+            </label>
+          </div>
+          <div class="grid2">
+            <label class="field" id="campo-valor-mensal" style="display:none">Valor mensal (R$) <input type="number" id="valor_mensal" min="0" step="0.01"></label>
+            <label class="field" id="campo-valor-total" style="display:none">Valor do curso (R$) <input type="number" id="valor_total" min="0" step="0.01"></label>
             <label class="field" id="campo-valor-aula" style="display:none">Valor por aula (R$) <input type="number" id="valor_aula" min="0" step="0.01"></label>
           </div>
+          <div class="field" id="campo-parcelas" style="display:none">Parcelas <span class="obrigatorio">*</span>
+            <div class="row gap">
+              <label class="check"><input type="radio" name="parcelas" value="1"> 1x</label>
+              <label class="check"><input type="radio" name="parcelas" value="6"> 6x</label>
+              <label class="check"><input type="radio" name="parcelas" value="12" checked> 12x</label>
+            </div>
+          </div>
+          <label class="field">Dia do vencimento (dia fixo, 1 a 28) <input type="number" id="dia_vencimento" min="1" max="28" value="5"></label>
           <div class="form-section">Situação</div>
           <div class="grid2">
             <label class="field">Status

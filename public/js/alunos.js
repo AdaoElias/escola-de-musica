@@ -9,7 +9,34 @@ const modal = document.getElementById('modal');
 const form = document.getElementById('form');
 const erro = document.getElementById('erro');
 const salvarBtn = document.getElementById('btn-salvar');
+const campoResponsavel = document.getElementById('campo-responsavel');
 let editando = null;
+
+function menorDeIdade(nascimento) {
+  if (!nascimento) return false;
+  const n = new Date(nascimento + 'T00:00:00');
+  const hoje = new Date();
+  let idade = hoje.getFullYear() - n.getFullYear();
+  const m = hoje.getMonth() - n.getMonth();
+  if (m < 0 || (m === 0 && hoje.getDate() < n.getDate())) idade--;
+  return idade < 18;
+}
+
+function atualizarResponsavel() {
+  const menor = menorDeIdade(document.getElementById('nascimento').value);
+  campoResponsavel.style.display = menor ? '' : 'none';
+  document.getElementById('titulo-responsavel').hidden = !menor;
+}
+
+function responsavelObrigatorio() {
+  const nome = document.getElementById('responsavel_nome').value.trim();
+  const cpf = document.getElementById('responsavel_cpf').value;
+  const telefone = document.getElementById('responsavel_telefone').value.trim();
+  if (!nome) { erro.textContent = 'Menor de idade exige o nome do responsável.'; return false; }
+  if (!cpf || cpf.replace(/\D/g, '').length !== 11) { erro.textContent = 'Menor de idade exige o CPF do responsável.'; return false; }
+  if (!telefone) { erro.textContent = 'Menor de idade exige o telefone do responsável.'; return false; }
+  return true;
+}
 
 const me = await perfil(sb);
 const admin = me && me.perfil === 'admin';
@@ -60,6 +87,11 @@ function abrirModal(aluno = null) {
   document.getElementById('telefone').value = aluno ? (aluno.telefone || '') : '';
   document.getElementById('email').value = aluno ? (aluno.email || '') : '';
   document.getElementById('observacao').value = aluno ? (aluno.observacao || '') : '';
+  document.getElementById('responsavel_nome').value = aluno ? (aluno.responsavel_nome || '') : '';
+  document.getElementById('responsavel_cpf').value = aluno ? formatarCpf(aluno.responsavel_cpf) : '';
+  document.getElementById('responsavel_telefone').value = aluno ? (aluno.responsavel_telefone || '') : '';
+  document.getElementById('parentesco').value = aluno ? (aluno.parentesco || '') : 'pai';
+  atualizarResponsavel();
   document.getElementById('cep').value = aluno ? (aluno.cep || '') : '';
   document.getElementById('endereco').value = aluno ? (aluno.endereco || '') : '';
   document.getElementById('bairro').value = aluno ? (aluno.bairro || '') : '';
@@ -89,7 +121,10 @@ document.getElementById('cep').addEventListener('keydown', (e) => {
   }
 });
 
+document.getElementById('nascimento').addEventListener('change', atualizarResponsavel);
 ligaMascaraTelefone(document.getElementById('telefone'));
+ligaMascaraCpf(document.getElementById('responsavel_cpf'));
+ligaMascaraTelefone(document.getElementById('responsavel_telefone'));
 ligaMascaraCpf(document.getElementById('cpf'));
 document.getElementById('cancelar').addEventListener('click', () => modal.close());
 ligaFecharModais(modal);
@@ -105,6 +140,10 @@ form.addEventListener('submit', async (e) => {
     telefone: document.getElementById('telefone').value.trim() || null,
     email: document.getElementById('email').value.trim() || null,
     observacao: document.getElementById('observacao').value.trim() || null,
+    responsavel_nome: document.getElementById('responsavel_nome').value.trim() || null,
+    responsavel_cpf: document.getElementById('responsavel_cpf').value.trim() || null,
+    responsavel_telefone: document.getElementById('responsavel_telefone').value.trim() || null,
+    parentesco: document.getElementById('parentesco').value || null,
     cep: document.getElementById('cep').value.trim() || null,
     endereco: document.getElementById('endereco').value.trim() || null,
     bairro: document.getElementById('bairro').value.trim() || null,
@@ -117,6 +156,10 @@ form.addEventListener('submit', async (e) => {
   }
   if (!emailValido(dados.email)) {
     erro.textContent = 'E-mail inválido (deve conter @).';
+    salvarBtn.disabled = false;
+    return;
+  }
+  if (menorDeIdade(dados.nascimento) && !responsavelObrigatorio()) {
     salvarBtn.disabled = false;
     return;
   }

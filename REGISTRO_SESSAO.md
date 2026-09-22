@@ -172,19 +172,43 @@ Motivo: forma dos formulários e falta de dashboard na home. Baseado em pesquisa
 
 ---
 
-## 10. Estado atual do projeto
+## 10. Etapa 6 — Matrícula (recibo) + Carnê 12x/6x/1x + Responsável (implementada; migração a aplicar)
+
+**Decisões do usuário:** (1) carnê gera lançamentos reais + documento; (2) dia de vencimento fixo configurável na matrícula; (3) valor final do curso + escolha de **1, 6 ou 12 parcelas** (parcela = mês); (4) **matrícula gera lançamento próprio pago no ato** (taxa `valor_matricula`, nunca tratada como parcela); (5) menor exige responsável obrigatório p/ documentação; (6) individual (VIP) tem horário fixo e consta como **"Aluno VIP"** nos documentos.
+
+**Banco — `MIGRACAO_ETAPA6.sql`:**
+- `tipo_pagamento` += `parcelado`; `tipo_lancamento` += `matricula`
+- `matriculas` += `valor_matricula`, `valor_total`, `parcelas (1/6/12)`, `dia_vencimento (1–28, default 5)`, `dia_semana`, `horario`, `matricula_forma_pagamento`
+- `alunos` += `responsavel_nome`, `responsavel_cpf`, `responsavel_telefone`, `parentesco`
+- Trigger `trig_financeiro_matricula`: ao inserir matrícula com `valor_matricula > 0`, cria lançamento `tipo='matricula'` **pago no ato** (status `paga`, `data_pagamento` = hoje, forma escolhida)
+- RPC `gerar_carne(matricula_id)`: gera N parcelas (`tipo='mensalidade'`, descrição "Parcela i/N - curso/VIP"), parcela = `valor_total/N` p/ as N-1 primeiras e última absorve o resto do arredondamento, `competencia` = mês i desde `data_inicio`, `vencimento` = dia fixo do mês; **bloqueia menor sem responsável**; `ON CONFLICT` no índice único (não duplica); admin-only
+- `gerar_mensalidades` (recorrente) passa a **ignorar** matrículas `parcelado` (carnê cobre); descrição de individual virou "Aluno VIP"
+- Índices únicos parciais recriados com `IF NOT EXISTS` (idempotente, não depende de ETAPA5)
+
+**UI:**
+- `alunos.html/js`: bloco "Responsável (menor)" visível quando idade < 18; obrigatório (nome + CPF + telefone) no salvar
+- `matriculas.html/js`: taxa de matrícula + forma (paga no ato), valor do curso + radio 1x/6x/12x, dia do vencimento, horário fixo p/ individual; botões **Recibo** e **Carnê** por linha; ao criar matrícula parcelada gera o carnê automaticamente (RPC)
+- `public/carne.html` + `public/js/carne.js` + `public/css/imprimir.css`: página de impressão A4 (`?matricula=ID&tipo=recibo|carne`) com **2 vias** ("1ª VIA — ALUNO" / "2ª VIA — ESCOLA") e grade de parcelas; carnê exclusivo de admin (RF30), recibo para todo logado
+- `financeiro.js`: badge "menor — resp. X", botão "Carnê" por lançamento (imprime do vínculo)
+
+**Banco — ⚠️ pendente de aplicar (depende de ETAPA5):**
+- Executar `MIGRACAO_ETAPA5.sql` e depois `MIGRACAO_ETAPA6.sql` no Supabase > SQL Editor. Ordem: **ETAPA5 primeiro** (mesmas funções/índices são redefinidas idempotentemente na ETAPA6, mas o fluxo previsto é ETAPA5 → ETAPA6).
+
+---
+
+## 11. Estado atual do projeto
 
 Repositório: https://github.com/AdaoElias/escola-de-musica
 Site: https://escola-demusica.netlify.app
 Banco: Supabase (tabelas do SCHEMA.sql + migration RLS aplicadas)
 
 ```
-public/            → index(login), app(painel/dashboard), professores, alunos, turmas, matriculas, grade, aulas, financeiro
-public/js/         → supabase.js, auth.js, ui.js, app.js, professores.js, alunos.js, turmas.js, matriculas.js, grade.js, aulas.js, financeiro.js, instrumentos.js
-public/css/style.css (design system claro)
+public/            → index(login), app(painel/dashboard), professores, alunos, turmas, matriculas, grade, aulas, financeiro, carne (impressão)
+public/js/         → supabase.js, auth.js, ui.js, app.js, professores.js, alunos.js, turmas.js, matriculas.js, grade.js, aulas.js, financeiro.js, carne.js, instrumentos.js
+public/css/style.css (design system claro) + imprimir.css (recibo/carnê A4)
 functions/         → hello.js, health.js, client-config.js
 netlify.toml, .env.example, .env.local (não versionado)
-REQUISITOS.md, SCHEMA.sql, MIGRACAO_ETAPA2.sql, MIGRACAO_ETAPA4.sql, MIGRACAO_ETAPA5.sql, MIGRACAO_ENDERECO.sql, MIGRACAO_CPF_NASCIMENTO.sql, MIGRACAO_FIX_RLS.sql
+REQUISITOS.md, SCHEMA.sql, MIGRACAO_ETAPA2.sql, MIGRACAO_ETAPA4.sql, MIGRACAO_ETAPA5.sql, MIGRACAO_ETAPA6.sql, MIGRACAO_ENDERECO.sql, MIGRACAO_CPF_NASCIMENTO.sql, MIGRACAO_FIX_RLS.sql
 ```
 
 **FIX (a aplicar no Supabase):** `MIGRACAO_FIX_RLS.sql` — funções `usuario_atual/administrador_atual/professor_atual` agora são `SECURITY DEFINER`. Sem isso, todo CRUD/logado estoura "stack depth limit exceeded" (recursão de RLS: função lê usuarios/professores → política da própria tabela chama a função de novo).
@@ -195,7 +219,7 @@ REQUISITOS.md, SCHEMA.sql, MIGRACAO_ETAPA2.sql, MIGRACAO_ETAPA4.sql, MIGRACAO_ET
 
 ---
 
-## 11. Próximos passos
+## 12. Próximos passos
 
 - ✅ **Etapa 0** requesitos/diagrama
 - ✅ **Etapa 1** ambiente (GitHub/Supabase/Netlify)
@@ -204,11 +228,13 @@ REQUISITOS.md, SCHEMA.sql, MIGRACAO_ETAPA2.sql, MIGRACAO_ETAPA4.sql, MIGRACAO_ET
 - ✅ **Etapa 4** grade + aulas + progresso/desempenho (falta aplicar MIGRACAO_ETAPA4.sql)
 - ✅ **Redesign** dashboard + base de design (Etapa 4.5) — Etapas 5/6 devem usar `.kpi/.alert/.badge/.toast/modal` já existentes
 - ✅ **Etapa 5** Financeiro (mensal via RPC + avulsa automática ao lançar aula) + inadimplência (KPIs) — **falta aplicar MIGRACAO_ETAPA5.sql**
-- ⏭️ **Etapa 6** Gráficos: desempenho da turma, por aluno, financeiro (views `vw_*` já prontas no SCHEMA.sql)
+- ✅ **Etapa 6** Recibo de matrícula + Carnê 1/6/12x (2 vias) + responsável p/ menor — **falta aplicar MIGRACAO_ETAPA6.sql** (após ETAPA5)
+- ⏭️ **Etapa 7** Gráficos: desempenho da turma, por aluno, financeiro (views `vw_*` já prontas no SCHEMA.sql)
 
 **Pendências anotadas:**
 - ⚠️ Aplicar `MIGRACAO_ETAPA5.sql` no Supabase (financeiro: RPC + triggers) — necessário para o módulo funcionar
+- ⚠️ Aplicar `MIGRACAO_ETAPA6.sql` no Supabase (recibo + carnê: campos, enums, RPC `gerar_carne`, trigger de matrícula) — **despois da ETAPA5**
 - ⚠️ Aplicar `MIGRACAO_ETAPA4.sql` no Supabase (views de progresso)
 - Excluir/ajustar conta `teste@escola.com` e criar e-mail definitivo de admin (ou manter, se preferir)
 - Avaliar liberação: professor acessa só com conta vinculada (`professores.usuario_id`)
-- Views `vw_desempenho_turma/vw_desempenho_aluno/vw_financeiro_resumo/vw_inadimplentes` já existem no banco → consumir na Etapa 6
+- Views `vw_desempenho_turma/vw_desempenho_aluno/vw_financeiro_resumo/vw_inadimplentes` já existem no banco → consumir na Etapa 7

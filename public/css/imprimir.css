@@ -1,0 +1,81 @@
+.print-wrap {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.via {
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 1.4rem;
+  margin-bottom: 1rem;
+}
+
+.doc-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-bottom: 2px solid #0f172a;
+  padding-bottom: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.doc-brand { display: flex; align-items: center; gap: 0.5rem; }
+.doc-icon { font-size: 1.4rem; }
+.doc-brand h1 { font-size: 1.15rem; margin: 0; }
+.doc-titulo { text-align: right; font-weight: 700; font-size: 1rem; }
+.doc-titulo small { font-weight: 600; color: #475569; font-size: 0.75rem; }
+
+.doc-ficha, .doc-notch {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+.doc-ficha td { padding: 0.35rem 0; vertical-align: top; }
+.doc-ficha td.k { width: 45%; color: #475569; font-weight: 600; }
+.doc-ficha td.v { color: #0f172a; }
+
+.doc-resumo { margin: 0.4rem 0 0.8rem; font-size: 0.85rem; color: #334155; }
+
+.doc-notch th, .doc-notch td {
+  border: 1px solid #cbd5e1;
+  padding: 0.4rem 0.5rem;
+  text-align: left;
+}
+.doc-notch th { background: #f1f5f9; font-size: 0.8rem; }
+.doc-notch td.num { text-align: right; white-space: nowrap; }
+
+.doc-assin {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-top: 1.6rem;
+}
+.doc-assin div { flex: 1; text-align: center; }
+.doc-assin span {
+  display: block;
+  border-top: 1px solid #94a3b8;
+  padding-top: 0.3rem;
+  font-size: 0.75rem;
+  color: #475569;
+}
+
+.corte {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  margin: 0.2rem 0 0.8rem;
+}
+
+@media print {
+  @page { size: A4; margin: 12mm; }
+  .no-print { display: none !important; }
+  body { background: #fff !important; }
+  .print-wrap { max-width: 100%; padding: 0; }
+  .via { border: 0; padding: 0; margin: 0; page-break-before: always; }
+  .via:first-child { page-break-before: avoid; }
+  .corte { display: none; }
+}

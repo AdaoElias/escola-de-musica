@@ -26,6 +26,15 @@ const mesAtual = iso.slice(0, 7);
 function dinheiro(v) {
   return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
 }
+function menorDeIdade(aluno) {
+  if (!aluno || !aluno.nascimento) return false;
+  const n = new Date(aluno.nascimento + 'T00:00:00');
+  const hoje = new Date();
+  let idade = hoje.getFullYear() - n.getFullYear();
+  const m = hoje.getMonth() - n.getMonth();
+  if (m < 0 || (m === 0 && hoje.getDate() < n.getDate())) idade--;
+  return idade < 18;
+}
 function dataBr(d) {
   return d ? d.slice(0, 10).split('-').reverse().join('/') : '—';
 }
@@ -119,7 +128,7 @@ function kpi(classe, label, value, foot) {
 
 async function carregar() {
   let q = sb.from('financeiro')
-    .select('*, aluno:alunos(nome)')
+    .select('*, aluno:alunos(nome, nascimento, responsavel_nome)')
     .order('vencimento', { ascending: true })
     .order('id', { ascending: false });
 
@@ -139,14 +148,19 @@ async function carregar() {
     if (l.status !== 'cancelada') soma += Number(l.valor || 0);
     const tr = document.createElement('tr');
     const pendente = l.status === 'pendente' || l.status === 'atrasada';
+    const resp = menorDeIdade(l.aluno);
+    const nomeAluno = l.aluno
+      ? l.aluno.nome + (resp && l.aluno.responsavel_nome ? '<br><small>menor — resp. ' + l.aluno.responsavel_nome + '</small>' : '')
+      : '—';
     tr.innerHTML = `
-      <td>${l.aluno ? l.aluno.nome : '—'}</td>
+      <td>${nomeAluno}</td>
       <td>${l.descricao}</td>
       <td>${mesBr(l.competencia)}</td>
       <td>${dataBr(l.vencimento)}</td>
       <td>${dinheiro(l.valor)}</td>
       <td>${BADGES[l.status] || l.status}</td>
       <td class="acoes">
+        ${l.matricula_id ? '<button class="mini" data-carne="' + l.matricula_id + '">Carnê</button>' : ''}
         ${pendente ? '<button class="mini" data-baixar="' + l.id + '">Baixar</button>' : ''}
         ${pendente ? '<button class="mini danger" data-cancelar="' + l.id + '">Cancelar</button>' : ''}
       </td>`;
@@ -182,7 +196,10 @@ async function popularAlunos() {
 async function acoesTabela(e) {
   const btnBaixar = e.target.closest('[data-baixar]');
   const btnCancelar = e.target.closest('[data-cancelar]');
-  if (btnBaixar) {
+  const btnCarne = e.target.closest('[data-carne]');
+  if (btnCarne) {
+    window.open('/carne.html?matricula=' + btnCarne.dataset.carne + '&tipo=carne', '_blank');
+  } else if (btnBaixar) {
     const id = Number(btnBaixar.dataset.baixar);
     const { data } = await sb.from('financeiro').select('*, aluno:alunos(nome)').eq('id', id).single();
     if (!data) return;

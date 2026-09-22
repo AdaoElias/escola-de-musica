@@ -55,6 +55,23 @@
           <label class="field">E-mail <input type="email" id="email"></label>
           <label class="field">Observações <input type="text" id="observacao"></label>
 
+          <div class="form-section" id="titulo-responsavel">Responsável (aluno menor de idade)</div>
+          <div id="campo-responsavel">
+            <label class="field">Nome do responsável <span class="obrigatorio" id="req-resp-nome">*</span><input type="text" id="responsavel_nome"></label>
+            <div class="grid2">
+              <label class="field">CPF do responsável <input type="text" id="responsavel_cpf" maxlength="14" placeholder="000.000.000-00"></label>
+              <label class="field">Telefone do responsável <input type="tel" id="responsavel_telefone" maxlength="15" placeholder="(11) 91234-5678"></label>
+            </div>
+            <label class="field">Parentesco
+              <select id="parentesco">
+                <option value="pai">Pai</option>
+                <option value="mae">Mãe</option>
+                <option value="tutor">Tutor</option>
+                <option value="outro">Outro</option>
+              </select>
+            </label>
+          </div>
+
           <div class="form-section">Endereço</div>
           <div class="cep-row">
             <label class="field">CEP
