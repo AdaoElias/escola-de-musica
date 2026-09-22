@@ -256,11 +256,11 @@ REQUISITOS.md, SCHEMA.sql (baseline ETAPA6), MIGRACAO_ETAPA2/4/5/6.sql, MIGRACAO
 - ✅ **Etapa 0–7** concluídas (requisitos, ambiente, RLS/login, cadastros, grade/aulas, financeiro, carnê/recibo, relatórios)
 - ✅ **Etapa 8** Exportação CSV (financeiro, alunos, matrículas, turmas, relatórios)
 - ✅ **Etapa 9** Troca de senha pelo próprio usuário
-- ⏭️ Fim do roadmap original (`REQUISITOS.md` RF01–RF35 cobertos)
+- ✅ Fim do roadmap original (`REQUISITOS.md` RF01–RF35 cobertos)
 
 **Pendências anotadas:**
-- ⚠️ Aplicar `MIGRACAO_ETAPA4.sql` no Supabase (views de progresso `vw_progresso_turma/vw_progresso_aluno` — seção de progresso da aba Aulas)
-- ⚠️ Aplicar `MIGRACAO_FIX_RLS.sql` se ainda não aplicado (evita "stack depth limit exceeded" no CRUD logado)
+- ✅ **`MIGRACAO_PENDENTE.sql` aplicada** (22/09/2026): FIX_RLS (funções SECURITY DEFINER) + views `vw_progresso_turma/vw_progresso_aluno` — nenhuma pendência de banco restante
 - Excluir/ajustar conta `teste@escola.com` e criar e-mail definitivo de admin
 - Avaliar liberação: professor acessa só com conta vinculada (`professores.usuario_id`)
 - Opcional: recuperação de senha via e-mail (Supabase Auth recovery) — hoje a troca é feita logado (Etapa 9)
+- Opcional: seed não insere `conteudos_ministrados`/`desempenhos` (gráficos de desempenho ficam vazios até lançar aulas de verdade)
