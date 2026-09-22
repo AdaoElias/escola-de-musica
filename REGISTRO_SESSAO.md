@@ -164,6 +164,8 @@ netlify.toml, .env.example, .env.local (não versionado)
 REQUISITOS.md, SCHEMA.sql, MIGRACAO_ETAPA2.sql, MIGRACAO_ETAPA4.sql
 ```
 
+**FIX (a aplicar no Supabase):** `MIGRACAO_FIX_RLS.sql` — funções `usuario_atual/administrador_atual/professor_atual` agora são `SECURITY DEFINER`. Sem isso, todo CRUD/logado estoura "stack depth limit exceeded" (recursão de RLS: função lê usuarios/professores → política da própria tabela chama a função de novo).
+
 **Conta de teste ativa:** `teste@escola.com` (admin). Sugestão: trocar pela conta definitiva.
 
 ---
