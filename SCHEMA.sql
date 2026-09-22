@@ -32,6 +32,8 @@ CREATE TABLE professores (
   id          BIGSERIAL PRIMARY KEY,
   usuario_id  BIGINT REFERENCES usuarios(id) ON DELETE SET NULL,
   nome        TEXT NOT NULL,
+  cpf         TEXT,
+  nascimento  DATE,
   instrumento TEXT,
   email       TEXT,
   telefone    TEXT,
@@ -48,6 +50,8 @@ CREATE TABLE professores (
 CREATE TABLE alunos (
   id          BIGSERIAL PRIMARY KEY,
   nome        TEXT NOT NULL,
+  cpf         TEXT,
+  nascimento  DATE,
   telefone    TEXT,
   email       TEXT,
   endereco    TEXT,

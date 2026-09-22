@@ -1,5 +1,5 @@
 import { guard, logout, perfil } from './auth.js';
-import { toast, ligaFecharModais, buscarCep, ligaMascaraTelefone, emailValido } from './ui.js';
+import { toast, ligaFecharModais, buscarCep, ligaMascaraTelefone, emailValido, ligaMascaraCpf, formatarCpf, formatarDataBr } from './ui.js';
 
 const sb = await guard();
 if (!sb) throw new Error('redirecionado');
@@ -27,6 +27,8 @@ async function carregar() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${a.nome}</td>
+      <td>${formatarCpf(a.cpf) || '—'}</td>
+      <td>${formatarDataBr(a.nascimento)}</td>
       <td>${a.telefone || '—'}</td>
       <td>${a.email || '—'}</td>
       <td>${a.cidade || '—'}</td>
@@ -37,12 +39,12 @@ async function carregar() {
       </td>`;
     tbody.appendChild(tr);
   }
-  if (!data.length) tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum aluno cadastrado ainda.</td></tr>';
+  if (!data.length) tbody.innerHTML = '<tr><td colspan="8" class="empty">Nenhum aluno cadastrado ainda.</td></tr>';
 }
 
 function mostrarErroTabela(msg) {
   const tr = document.createElement('tr');
-  tr.innerHTML = '<td colspan="6" class="error">Erro ao carregar: ' + msg + '</td>';
+  tr.innerHTML = '<td colspan="8" class="error">Erro ao carregar: ' + msg + '</td>';
   tbody.appendChild(tr);
 }
 
@@ -53,6 +55,8 @@ function abrirModal(aluno = null) {
   document.getElementById('titulo-modal').textContent = aluno ? 'Editar aluno' : 'Novo aluno';
   document.getElementById('id').value = aluno ? aluno.id : '';
   document.getElementById('nome').value = aluno ? aluno.nome : '';
+  document.getElementById('cpf').value = aluno ? formatarCpf(aluno.cpf) : '';
+  document.getElementById('nascimento').value = aluno ? (aluno.nascimento || '') : '';
   document.getElementById('telefone').value = aluno ? (aluno.telefone || '') : '';
   document.getElementById('email').value = aluno ? (aluno.email || '') : '';
   document.getElementById('observacao').value = aluno ? (aluno.observacao || '') : '';
@@ -86,6 +90,7 @@ document.getElementById('cep').addEventListener('keydown', (e) => {
 });
 
 ligaMascaraTelefone(document.getElementById('telefone'));
+ligaMascaraCpf(document.getElementById('cpf'));
 document.getElementById('cancelar').addEventListener('click', () => modal.close());
 ligaFecharModais(modal);
 
@@ -95,6 +100,8 @@ form.addEventListener('submit', async (e) => {
   salvarBtn.disabled = true;
   const dados = {
     nome: document.getElementById('nome').value.trim(),
+    cpf: document.getElementById('cpf').value.trim() || null,
+    nascimento: document.getElementById('nascimento').value || null,
     telefone: document.getElementById('telefone').value.trim() || null,
     email: document.getElementById('email').value.trim() || null,
     observacao: document.getElementById('observacao').value.trim() || null,

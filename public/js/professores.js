@@ -1,5 +1,5 @@
 import { guard, logout, perfil } from './auth.js';
-import { toast, ligaFecharModais, buscarCep, ligaMascaraTelefone, emailValido } from './ui.js';
+import { toast, ligaFecharModais, buscarCep, ligaMascaraTelefone, emailValido, ligaMascaraCpf, formatarCpf, formatarDataBr } from './ui.js';
 import { popularInstrumentos, popularFormacoes } from './instrumentos.js';
 
 const sb = await guard();
@@ -27,6 +27,8 @@ async function carregar() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${p.nome}</td>
+      <td>${formatarCpf(p.cpf) || '—'}</td>
+      <td>${formatarDataBr(p.nascimento)}</td>
       <td>${p.instrumento || '—'}</td>
       <td>${p.email || '—'}</td>
       <td>${p.telefone || '—'}</td>
@@ -39,13 +41,13 @@ async function carregar() {
     tbody.appendChild(tr);
   }
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum professor cadastrado ainda.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="empty">Nenhum professor cadastrado ainda.</td></tr>';
   }
 }
 
 function mostrarErroTabela(msg) {
   const tr = document.createElement('tr');
-  tr.innerHTML = '<td colspan="7" class="error">Erro ao carregar: ' + msg + '</td>';
+  tr.innerHTML = '<td colspan="9" class="error">Erro ao carregar: ' + msg + '</td>';
   tbody.appendChild(tr);
 }
 
@@ -56,6 +58,8 @@ function abrirModal(prof = null) {
   document.getElementById('titulo-modal').textContent = prof ? 'Editar professor' : 'Novo professor';
   document.getElementById('id').value = prof ? prof.id : '';
   document.getElementById('nome').value = prof ? prof.nome : '';
+  document.getElementById('cpf').value = prof ? formatarCpf(prof.cpf) : '';
+  document.getElementById('nascimento').value = prof ? (prof.nascimento || '') : '';
   document.getElementById('instrumento').value = prof ? (prof.instrumento || '') : '';
   document.getElementById('email').value = prof ? (prof.email || '') : '';
   document.getElementById('telefone').value = prof ? (prof.telefone || '') : '';
@@ -90,6 +94,7 @@ document.getElementById('cep').addEventListener('keydown', (e) => {
 });
 
 ligaMascaraTelefone(document.getElementById('telefone'));
+ligaMascaraCpf(document.getElementById('cpf'));
 popularFormacoes();
 document.getElementById('cancelar').addEventListener('click', () => modal.close());
 ligaFecharModais(modal);
@@ -100,6 +105,8 @@ form.addEventListener('submit', async (e) => {
   salvarBtn.disabled = true;
   const dados = {
     nome: document.getElementById('nome').value.trim(),
+    cpf: document.getElementById('cpf').value.trim() || null,
+    nascimento: document.getElementById('nascimento').value || null,
     instrumento: document.getElementById('instrumento').value.trim() || null,
     email: document.getElementById('email').value.trim() || null,
     telefone: document.getElementById('telefone').value.trim() || null,

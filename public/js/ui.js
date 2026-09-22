@@ -40,6 +40,27 @@ export function emailValido(valor) {
   return !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 }
 
+export function ligaMascaraCpf(input) {
+  input.addEventListener('input', () => {
+    const d = input.value.replace(/\D/g, '').slice(0, 11);
+    input.value = d.length > 9 ? d.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2})$/, '$1.$2.$3-$4')
+      : d.length > 6 ? d.replace(/^(\d{3})(\d{3})(\d{0,3})$/, '$1.$2.$3')
+      : d.length > 3 ? d.replace(/^(\d{3})(\d{0,3})$/, '$1.$2')
+      : d;
+  });
+}
+
+export function formatarCpf(cpf) {
+  const d = (cpf || '').replace(/\D/g, '').slice(0, 11);
+  return d ? d.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2})$/, '$1.$2.$3-$4') : '';
+}
+
+export function formatarDataBr(iso) {
+  if (!iso) return '—';
+  const [a, m, d] = iso.slice(0, 10).split('-');
+  return a && m && d ? d + '/' + m + '/' + a : iso;
+}
+
 export async function buscarCep(cepInput) {
   const digitos = (cepInput.value || '').replace(/\D/g, '').slice(0, 8);
   cepInput.value = digitos ? digitos.replace(/^(\d{5})(\d{3})$/, '$1-$2') : '';
