@@ -1,5 +1,6 @@
 import { guard, logout, perfil } from './auth.js';
 import { linha, barras } from './graficos.js';
+import { baixarCsv } from './csv.js';
 
 const sb = await guard();
 if (!sb) throw new Error('redirecionado');
@@ -11,9 +12,15 @@ document.getElementById('sair').addEventListener('click', logout);
 
 const selTurma = document.getElementById('sel-turma');
 const selAluno = document.getElementById('sel-aluno');
+let turmaPts = [];
+let alunoPts = [];
+let finRows = [];
 
 function dinheiroCurto(v) {
   return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { maximumFractionDigits: 0 });
+}
+function dinheiroCheio(v) {
+  return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
 }
 function mesLabel(ts) {
   return (ts || '').slice(0, 7).replace('-', '/');
@@ -49,6 +56,7 @@ async function carregarDesempenhoTurma(id) {
     x: (r.data_aula || '').slice(0, 7).replace('-', '/'),
     y: Number(r.evolucao_media || 0),
   }));
+  turmaPts = pts;
   linha(g, pts, { cor: 'var(--primaria)', fmt: (v) => Math.round(v) + '%' });
 }
 
@@ -82,6 +90,7 @@ async function carregarDesempenhoAluno(id) {
     x: (r.data || '').slice(0, 10),
     y: Number(r.desempenho || 0),
   }));
+  alunoPts = pts;
   linha(g, pts, { cor: 'var(--ok)', fmt: (v) => Math.round(v) + '%' });
 }
 
@@ -100,6 +109,7 @@ async function carregarFinanceiro() {
     return;
   }
   const rows = (data || []).slice(-12);
+  finRows = rows;
   barras(g, {
     categorias: rows.map((r) => mesLabel(r.competencia)),
     series: [
@@ -109,6 +119,28 @@ async function carregarFinanceiro() {
     fmt: dinheiroCurto,
   });
 }
+
+function exportarTurma() {
+  const nome = selTurma.options[selTurma.selectedIndex]?.textContent || 'turma';
+  baixarCsv('desempenho_turma_' + nome.replace(/\s+/g, '_'),
+    ['Competência', 'Evolução média (%)'],
+    turmaPts.map((p) => [p.x, p.y]));
+}
+function exportarAluno() {
+  const nome = selAluno.options[selAluno.selectedIndex]?.textContent || 'aluno';
+  baixarCsv('desempenho_aluno_' + nome.replace(/\s+/g, '_'),
+    ['Data', 'Desempenho (%)'],
+    alunoPts.map((p) => [p.x, p.y]));
+}
+function exportarFin() {
+  baixarCsv('financeiro_por_competencia',
+    ['Competência', 'A receber', 'Recebido', 'Inadimplente'],
+    finRows.map((r) => [mesLabel(r.competencia), dinheiroCheio(r.a_receber), dinheiroCheio(r.recebido), dinheiroCheio(r.inadimplente)]));
+}
+
+document.getElementById('exp-turma').addEventListener('click', exportarTurma);
+document.getElementById('exp-aluno').addEventListener('click', exportarAluno);
+document.getElementById('exp-fin').addEventListener('click', exportarFin);
 
 selTurma.addEventListener('change', () => carregarDesempenhoTurma(Number(selTurma.value)));
 selAluno.addEventListener('change', () => carregarDesempenhoAluno(Number(selAluno.value)));

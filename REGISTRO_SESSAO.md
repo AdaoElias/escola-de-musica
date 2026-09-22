@@ -211,46 +211,56 @@ Nova página **Relatórios** (`public/relatorios.html` + `public/js/relatorios.j
 
 ---
 
-## 12. Estado atual do projeto
+## 12. Etapa 8 — Exportação CSV (RF35) e Etapa 9 — Troca de senha (RF04) (implementadas)
+
+**Etapa 8 — CSV:**
+- `public/js/csv.js` → `baixarCsv(nome, colunas, linhas)` (delimitador `;`, BOM UTF-8 para abrir certo no Excel pt-BR) + `exportarTabela(tabela, nome)`; auto-injeta o botão **"↓ Exportar CSV"** acima de toda `table[data-export]`
+- Com `data-export` nas tabelas de **Financeiro, Alunos, Matrículas e Turmas** (exporta a lista conforme os filtros atuais; coluna "Ações" é ignorada)
+- **Relatórios**: botões de exportar por gráfico (`desempenho_turma_*`, `desempenho_aluno_*`, `financeiro_por_competencia`), com os dados plotados
+
+**Etapa 9 — Troca de senha (RF04):**
+- `public/js/senha.js` injeta o botão **"Senha"** no topbar (`public/js/auth.js` não é alterado) e um `<dialog>` de troca usando `sb.auth.updateUser({password})`; valida min 6 + confirmação; mantém a sessão
+- Adicionado como `<script type="module" src="/js/senha.js">` nas 9 páginas logadas
+
+**Validação:** `node --check` em `csv.js`, `senha.js`, `relatorios.js` (v24) — OK.
+
+---
+
+## 13. Estado atual do projeto
 
 Repositório: https://github.com/AdaoElias/escola-de-musica
 Site: https://escola-demusica.netlify.app
-Banco: Supabase (tabelas do SCHEMA.sql + migrations ETAPA2/REDESIGN/FIX_RLS/ENDERECO/CPF_NASCIMENTO/**ETAPA5/ETAPA6** aplicadas; ETAPA4 pendente)
+Banco: Supabase (tabelas do SCHEMA.sql + migrations ETAPA2/REDESIGN/FIX_RLS/ENDERECO/CPF_NASCIMENTO/ETAPA5/ETAPA6 aplicadas; ETAPA4 pendente)
 
 ```
-public/            → index(login), app(painel/dashboard), professores, alunos, turmas, matriculas, grade, aulas, financeiro, relatorios, carne (impressão)
-public/js/         → supabase.js, auth.js, ui.js, app.js, professores.js, alunos.js, turmas.js, matriculas.js, grade.js, aulas.js, financeiro.js, relatorios.js, graficos.js (svg), carne.js, instrumentos.js
+public/            → index(login), app(painel), professores, alunos, turmas, matriculas, grade, aulas, financeiro, relatorios, carne (impressão)
+public/js/         → supabase.js, auth.js, ui.js, csv.js (export), senha.js (troca senha), app.js, professores.js, alunos.js, turmas.js, matriculas.js, grade.js, aulas.js, financeiro.js, relatorios.js, graficos.js (svg), carne.js, instrumentos.js
 public/css/style.css (design system claro) + imprimir.css (recibo/carnê A4)
 functions/         → hello.js, health.js, client-config.js
 netlify.toml, .env.example, .env.local (não versionado)
-REQUISITOS.md, SCHEMA.sql, MIGRACAO_ETAPA2/4/5/6.sql, MIGRACAO_ENDERECO.sql, MIGRACAO_CPF_NASCIMENTO.sql, MIGRACAO_FIX_RLS.sql, SEED_TESTE.sql
+REQUISITOS.md, SCHEMA.sql (baseline ETAPA6), MIGRACAO_ETAPA2/4/5/6.sql, MIGRACAO_ENDERECO.sql, MIGRACAO_CPF_NASCIMENTO.sql, MIGRACAO_FIX_RLS.sql, SEED_TESTE.sql
 ```
 
-**Migrações ETAPA5 e ETAPA6 já aplicadas** no Supabase (usuário confirmou). **ETAPA4 ainda pendente.**
+**Migrações ETAPA5 e ETAPA6 já aplicadas** no Supabase. **ETAPA4 ainda pendente.**
 
 **FIX (a aplicar no Supabase):** `MIGRACAO_FIX_RLS.sql` — funções `usuario_atual/administrador_atual/professor_atual` agora são `SECURITY DEFINER`. Sem isso, todo CRUD/logado estoura "stack depth limit exceeded" (recursão de RLS: função lê usuarios/professores → política da própria tabela chama a função de novo).
 
-**Migração `MIGRACAO_ENDERECO.sql`:** adiciona `endereco, bairro, cidade, cep` em `professores` e `alunos`. Forms com busca de CEP via **ViaCEP** (helper `buscarCep` em `ui.js`; botão "Buscar CEP", blur/Enter também buscam). Coluna "Cidade" nas duas tabelas.
+**Migração `MIGRACAO_ENDERECO.sql`:** adiciona `endereco, bairro, cidade, cep` em `professores` e `alunos`. Forms com busca de CEP via **ViaCEP** (helper `buscarCep` em `ui.js`).
 
 **Conta de teste ativa:** `teste@escola.com` (admin). Sugestão: trocar pela conta definitiva.
 
 ---
 
-## 13. Próximos passos
+## 14. Próximos passos
 
-- ✅ **Etapa 0** requesitos/diagrama
-- ✅ **Etapa 1** ambiente (GitHub/Supabase/Netlify)
-- ✅ **Etapa 2** login + RLS + professores
-- ✅ **Etapa 3** alunos + turmas + matrículas
-- ✅ **Etapa 4** grade + aulas + progresso/desempenho (falta aplicar MIGRACAO_ETAPA4.sql)
-- ✅ **Redesign** dashboard + base de design (Etapa 4.5)
-- ✅ **Etapa 5** Financeiro (mensal via RPC + avulsa automática ao lançar aula) — **aplicada**
-- ✅ **Etapa 6** Recibo de matrícula + Carnê 1/6/12x (2 vias) + responsável p/ menor — **aplicada** (constraint `matriculas_check2` relaxada via seed)
-- ✅ **Etapa 7** Relatórios com gráficos SVG (desempenho turma/aluno + financeiro) — página nova no menu
+- ✅ **Etapa 0–7** concluídas (requisitos, ambiente, RLS/login, cadastros, grade/aulas, financeiro, carnê/recibo, relatórios)
+- ✅ **Etapa 8** Exportação CSV (financeiro, alunos, matrículas, turmas, relatórios)
+- ✅ **Etapa 9** Troca de senha pelo próprio usuário
+- ⏭️ Fim do roadmap original (`REQUISITOS.md` RF01–RF35 cobertos)
 
 **Pendências anotadas:**
-- ⚠️ Aplicar `MIGRACAO_ETAPA4.sql` no Supabase (views de progresso `vw_progresso_turma/vw_progresso_aluno`)
-- ✅ `SCHEMA.sql` atualizado como baseline do estado ETAPA6: enums `parcelado`/`matricula`, colunas de carnê/responsável/horário, índices únicos parciais e constraint de turma relaxada (`IN ('mensal','parcelado')`)
-- Excluir/ajustar conta `teste@escola.com` e criar e-mail definitivo de admin (ou manter, se preferir)
+- ⚠️ Aplicar `MIGRACAO_ETAPA4.sql` no Supabase (views de progresso `vw_progresso_turma/vw_progresso_aluno` — seção de progresso da aba Aulas)
+- ⚠️ Aplicar `MIGRACAO_FIX_RLS.sql` se ainda não aplicado (evita "stack depth limit exceeded" no CRUD logado)
+- Excluir/ajustar conta `teste@escola.com` e criar e-mail definitivo de admin
 - Avaliar liberação: professor acessa só com conta vinculada (`professores.usuario_id`)
-- Verificar visual dos gráficos com dados reais do seed (o seed não insere `conteudos_ministrados`/`desempenhos`; gráficos de desempenho ficam vazios até lançar aulas)
+- Opcional: recuperação de senha via e-mail (Supabase Auth recovery) — hoje a troca é feita logado (Etapa 9)

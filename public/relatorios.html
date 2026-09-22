@@ -35,7 +35,10 @@
           <h4>Desempenho da turma</h4>
           <p class="sub">Evolução média (%) lançada a cada aula</p>
         </div>
-        <select id="sel-turma" class="graf-sel"></select>
+        <div class="row gap" style="margin:0">
+          <select id="sel-turma" class="graf-sel"></select>
+          <button id="exp-turma" class="btn mini ghost">Exportar CSV</button>
+        </div>
       </div>
       <div class="graf" id="graf-turma"></div>
     </section>
@@ -46,7 +49,10 @@
           <h4>Desempenho por aluno</h4>
           <p class="sub">Avaliações por aula (individual ou dentro da turma)</p>
         </div>
-        <select id="sel-aluno" class="graf-sel"></select>
+        <div class="row gap" style="margin:0">
+          <select id="sel-aluno" class="graf-sel"></select>
+          <button id="exp-aluno" class="btn mini ghost">Exportar CSV</button>
+        </div>
       </div>
       <div class="graf" id="graf-aluno"></div>
     </section>
@@ -57,11 +63,13 @@
           <h4>Financeiro por competência</h4>
           <p class="sub">A receber × recebido por mês</p>
         </div>
+        <button id="exp-fin" class="btn mini ghost">Exportar CSV</button>
       </div>
       <div class="graf" id="graf-fin"></div>
     </section>
   </main>
 
   <script type="module" src="/js/relatorios.js"></script>
+  <script type="module" src="/js/senha.js"></script>
 </body>
 </html>
