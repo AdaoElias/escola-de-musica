@@ -22,6 +22,24 @@ export function ligaFecharModais(modal) {
   }
 }
 
+export function ligaMascaraTelefone(input) {
+  input.addEventListener('input', () => {
+    const d = input.value.replace(/\D/g, '').slice(0, 11);
+    if (d.length <= 10) {
+      input.value = d.length > 6 ? d.replace(/^(\d{2})(\d{4})(\d{0,4})$/, '($1) $2-$3')
+        : d.length > 2 ? d.replace(/^(\d{2})(\d{0,4})$/, '($1) $2')
+        : d.replace(/^(\d{0,2})$/, d.length === 2 ? '($1)' : '$1');
+    } else {
+      input.value = d.replace(/^(\d{2})(\d{5})(\d{0,4})$/, '($1) $2-$3');
+    }
+  });
+}
+
+export function emailValido(valor) {
+  const v = (valor || '').trim();
+  return !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+}
+
 export async function buscarCep(cepInput) {
   const digitos = (cepInput.value || '').replace(/\D/g, '').slice(0, 8);
   cepInput.value = digitos ? digitos.replace(/^(\d{5})(\d{3})$/, '$1-$2') : '';

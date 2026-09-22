@@ -1,5 +1,6 @@
 import { guard, logout, perfil } from './auth.js';
-import { toast, ligaFecharModais, buscarCep } from './ui.js';
+import { toast, ligaFecharModais, buscarCep, ligaMascaraTelefone, emailValido } from './ui.js';
+import { popularInstrumentos, popularFormacoes } from './instrumentos.js';
 
 const sb = await guard();
 if (!sb) throw new Error('redirecionado');
@@ -87,6 +88,9 @@ document.getElementById('cep').addEventListener('keydown', (e) => {
     preencherEndereco();
   }
 });
+
+ligaMascaraTelefone(document.getElementById('telefone'));
+popularFormacoes();
 document.getElementById('cancelar').addEventListener('click', () => modal.close());
 ligaFecharModais(modal);
 
@@ -110,6 +114,11 @@ form.addEventListener('submit', async (e) => {
     salvarBtn.disabled = false;
     return;
   }
+  if (!emailValido(dados.email)) {
+    erro.textContent = 'E-mail inválido (deve conter @).';
+    salvarBtn.disabled = false;
+    return;
+  }
 
   const { error } = editando
     ? await sb.from('professores').update(dados).eq('id', editando.id)
@@ -122,7 +131,8 @@ form.addEventListener('submit', async (e) => {
   }
   modal.close();
   toast(editando ? 'Professor atualizado.' : 'Professor cadastrado.');
-  carregar();
+carregar();
+popularInstrumentos(sb);
 });
 
 tbody.addEventListener('click', async (e) => {

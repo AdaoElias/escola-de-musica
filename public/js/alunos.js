@@ -1,5 +1,5 @@
 import { guard, logout, perfil } from './auth.js';
-import { toast, ligaFecharModais, buscarCep } from './ui.js';
+import { toast, ligaFecharModais, buscarCep, ligaMascaraTelefone, emailValido } from './ui.js';
 
 const sb = await guard();
 if (!sb) throw new Error('redirecionado');
@@ -84,6 +84,8 @@ document.getElementById('cep').addEventListener('keydown', (e) => {
     preencherEndereco();
   }
 });
+
+ligaMascaraTelefone(document.getElementById('telefone'));
 document.getElementById('cancelar').addEventListener('click', () => modal.close());
 ligaFecharModais(modal);
 
@@ -103,6 +105,11 @@ form.addEventListener('submit', async (e) => {
     ativo: document.getElementById('ativo').checked,
   };
   if (!dados.nome) {
+    salvarBtn.disabled = false;
+    return;
+  }
+  if (!emailValido(dados.email)) {
+    erro.textContent = 'E-mail inválido (deve conter @).';
     salvarBtn.disabled = false;
     return;
   }

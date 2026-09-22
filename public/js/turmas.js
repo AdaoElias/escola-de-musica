@@ -1,5 +1,6 @@
 import { guard, logout, perfil } from './auth.js';
 import { toast, ligaFecharModais } from './ui.js';
+import { popularInstrumentos } from './instrumentos.js';
 
 const sb = await guard();
 if (!sb) throw new Error('redirecionado');
@@ -113,7 +114,8 @@ form.addEventListener('submit', async (e) => {
   }
   modal.close();
   toast(editando ? 'Turma atualizada.' : 'Turma criada.');
-  carregar();
+carregar();
+popularInstrumentos(sb);
 });
 
 tbody.addEventListener('click', async (e) => {
