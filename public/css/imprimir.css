@@ -70,6 +70,85 @@
   margin: 0.2rem 0 0.8rem;
 }
 
+/* ---------- Carnê estilo loja: canhoto + cópia ---------- */
+.carne-intro {
+  font-size: 0.8rem;
+  color: #334155;
+  text-align: center;
+  border: 1px dashed #cbd5e1;
+  padding: 0.45rem;
+  margin-bottom: 0.9rem;
+  border-radius: 8px;
+}
+.carne-linha {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: stretch;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  border-bottom: 2px dashed #94a3b8;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.carne-linha:last-child { border-bottom: 0; }
+.canhoto {
+  border: 1.5px solid #0f172a;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.68rem;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  height: 186px;
+  box-sizing: border-box;
+}
+.copia .canhoto { border-color: #64748b; border-style: dashed; }
+.copia .cn-brand::after { content: " — cópia"; color: #94a3b8; font-size: 0.62rem; }
+.cn-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+.cn-brand { font-weight: 700; color: #0f172a; }
+.cn-st { font-size: 0.6rem; font-weight: 800; padding: 2px 6px; border-radius: 20px; white-space: nowrap; }
+.cn-st.pago { background: #ecfdf5; color: #047857; }
+.cn-st.pend { background: #fffbeb; color: #b45309; }
+.cn-st.canc { background: #fef2f2; color: #b91c1c; }
+.cn-title { font-weight: 800; color: #334155; letter-spacing: 0.02em; }
+.cn-valor {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #047857;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 3px 0;
+}
+.cn-ficha { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; }
+.cn-f { display: flex; justify-content: space-between; gap: 6px; border-bottom: 1px dotted #e2e8f0; }
+.cn-f span { color: #64748b; }
+.cn-recebi {
+  font-size: 0.64rem;
+  color: #334155;
+  font-style: italic;
+  line-height: 1.35;
+}
+.cn-ass {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+}
+.cn-ass span {
+  flex: 1;
+  text-align: center;
+  border-top: 1px solid #94a3b8;
+  padding-top: 3px;
+  font-size: 0.6rem;
+  color: #475569;
+}
+
 @media print {
   @page { size: A4; margin: 12mm; }
   .no-print { display: none !important; }
@@ -78,4 +157,18 @@
   .via { border: 0; padding: 0; margin: 0; page-break-before: always; }
   .via:first-child { page-break-before: avoid; }
   .corte { display: none; }
+  .carne-intro { display: none; }
+  .carne-linha {
+    grid-template-columns: 52mm 52mm;
+    justify-content: space-between;
+    gap: 4mm;
+    height: 54mm;
+    padding: 0;
+    margin: 0 0 2mm;
+    border-bottom: 1px dashed #94a3b8;
+  }
+  .carne-linha:last-child { border-bottom: 0; }
+  .canhoto { height: 52mm; margin: 0; }
+  .carne-linha:nth-child(5n+1) { page-break-before: always; }
+  .carne-linha:first-child { page-break-before: avoid; }
 }

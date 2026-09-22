@@ -18,11 +18,23 @@ const DIAS = {
   quinta: 'Quinta-feira', sexta: 'Sexta-feira', sabado: 'Sábado',
 };
 
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
 function dinheiro(v) {
   return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
 }
 function dataBr(d) {
   return d ? d.slice(0, 10).split('-').reverse().join('/') : '—';
+}
+function mesBr(ts) {
+  const s = (ts || '').slice(0, 7);
+  if (!s) return '';
+  const [a, m] = s.split('-');
+  const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  return meses[Number(m) - 1] + '/' + a;
 }
 function menorDeIdade(nascimento) {
   if (!nascimento) return false;
@@ -61,20 +73,6 @@ async function carregar() {
     return;
   }
 
-  let parcela = [];
-  if (tipo === 'carne') {
-    const { data, error: e2 } = await sb.from('financeiro')
-      .select('*')
-      .eq('matricula_id', matriculaId)
-      .eq('tipo', 'mensalidade')
-      .order('competencia', { ascending: true });
-    if (e2) {
-      doc.innerHTML = '<p class="error">Erro ao carregar parcelas: ' + e2.message + '</p>';
-      return;
-    }
-    parcela = data || [];
-  }
-
   const aluno = m.aluno;
   const menor = menorDeIdade(aluno ? aluno.nascimento : null);
   const curso = m.turma ? m.turma.nome : 'Aluno VIP';
@@ -95,21 +93,30 @@ async function carregar() {
   ].filter(Boolean);
 
   const tabela = linhas.map(([k, v]) =>
-    '<tr><td class="k">' + k + '</td><td class="v">' + v + '</td></tr>').join('');
+    '<tr><td class="k">' + k + '</td><td class="v">' + esc(v) + '</td></tr>').join('');
 
-  const titulo = tipo === 'carne' ? 'CARNÊ DE PAGAMENTO' : 'RECIBO DE MATRÍCULA';
+  if (tipo === 'carne') {
+    const { data, error: e2 } = await sb.from('financeiro')
+      .select('*')
+      .eq('matricula_id', matriculaId)
+      .eq('tipo', 'mensalidade')
+      .order('competencia', { ascending: true });
+    if (e2) {
+      doc.innerHTML = '<p class="error">Erro ao carregar parcelas: ' + e2.message + '</p>';
+      return;
+    }
+    const parcela = data || [];
+    doc.innerHTML = carnesHtml(parcela, m, aluno, curso);
+    return;
+  }
 
   doc.innerHTML =
-    via(titulo, aluno, tabela, '1ª VIA — ALUNO / RESPONSÁVEL', m, parcela, menor) +
+    via('RECIBO DE MATRÍCULA', tabela, '1ª VIA — ALUNO / RESPONSÁVEL') +
     '<div class="corte no-print">— — — — — RECORTE AQUI — — — — —</div>' +
-    via(titulo, aluno, tabela, '2ª VIA — ESCOLA', m, parcela, menor);
+    via('RECIBO DE MATRÍCULA', tabela, '2ª VIA — ESCOLA');
 }
 
-function via(titulo, aluno, tabela, viaNome, m, parcela, menor) {
-  const parcelasHtml = tipo === 'carne'
-    ? tabelaParcelas(parcela)
-    : '';
-  const pago = parcela.filter((p) => p.status === 'paga').length;
+function via(titulo, tabela, viaNome) {
   return `
   <section class="via">
     <header class="doc-head">
@@ -119,13 +126,6 @@ function via(titulo, aluno, tabela, viaNome, m, parcela, menor) {
     <table class="doc-ficha">
       ${tabela}
     </table>
-    ${tipo === 'carne' ? `
-    <div class="doc-resumo">
-      Total do curso: <strong>${dinheiro(Number(m.valor_total))}</strong> ·
-      <strong>${parcela.length}</strong> parcela(s) · <strong>${pago}</strong> paga(s)
-    </div>
-    ${parcelasHtml}
-    ` : ''}
     <footer class="doc-assin">
       <div><span>Assinatura do aluno / responsável</span></div>
       <div><span>Assinatura da escola</span></div>
@@ -133,25 +133,61 @@ function via(titulo, aluno, tabela, viaNome, m, parcela, menor) {
   </section>`;
 }
 
-function tabelaParcelas(parcela) {
+function canhotoHtml(parcela, idx, ctx) {
+  const { m, aluno, curso } = ctx;
+  const N = ctx.N;
+  const alunoNome = aluno ? aluno.nome : '—';
+  const responsavel = aluno && aluno.responsavel_nome ? aluno.responsavel_nome : null;
+  const venc = dataBr(parcela.vencimento);
+  const ref = mesBr(parcela.competencia);
+  const valor = dinheiro(parcela.valor);
+  const st = parcela.status === 'paga'
+    ? '<span class="cn-st pago">PAGO ' + dataBr(parcela.data_pagamento) + '</span>'
+    : (parcela.status === 'cancelada' ? '<span class="cn-st canc">CANCELADA</span>' : '<span class="cn-st pend">PENDENTE</span>');
+  const ficha = [
+    ['Aluno(a)', alunoNome],
+    ['Curso / Turma', curso],
+    ['Matrícula nº', String(m.id)],
+    ['Vencimento', venc + (ref ? ' · Ref. ' + ref : '')],
+    responsavel ? ['Responsável', responsavel] : null,
+    ['Parcela', idx + ' de ' + N],
+  ].filter(Boolean).map(([k, v]) =>
+    '<div class="cn-f"><span>' + k + '</span><strong>' + esc(v) + '</strong></div>').join('');
+
+  return `
+  <div class="canhoto">
+    <div class="cn-top">
+      <span class="cn-brand">♪ Escola de Música</span>
+      ${st}
+    </div>
+    <div class="cn-title">Carnê de pagamento — Parcela ${idx} de ${N}</div>
+    <div class="cn-valor">${valor}</div>
+    <div class="cn-ficha">${ficha}</div>
+    <div class="cn-recebi">
+      Recebemos de ${esc(alunoNome)} a importância de ${valor} referente à ${idx}ª parcela
+      do curso de ${esc(curso)}${responsavel ? ' (responsável: ' + esc(responsavel) + ')' : ''}.
+    </div>
+    <div class="cn-ass">
+      <span>Assinatura da escola</span>
+      <span>Assinatura do aluno / responsável</span>
+    </div>
+  </div>`;
+}
+
+function carnesHtml(parcela, m, aluno, curso) {
   if (!parcela.length) {
     return '<p class="empty">Nenhuma parcela gerada — use "Carnê" na matrícula para gerar.</p>';
   }
-  const rows = parcela.map((p, i) => {
-    const st = p.status === 'paga'
-      ? 'PAGO em ' + dataBr(p.data_pagamento)
-      : (p.status === 'cancelada' ? 'CANCELADA' : 'Aguardando');
-    return `<tr>
-      <td class="num">${i + 1}/${parcela.length}</td>
-      <td>${dataBr(p.vencimento)}</td>
-      <td class="num">${dinheiro(p.valor)}</td>
-      <td>${st}</td>
-    </tr>`;
+  const N = parcela.length;
+  const ctx = { m, aluno, curso, N };
+  const linhas = parcela.map((p, i) => {
+    const c = canhotoHtml(p, i + 1, ctx);
+    return '<div class="carne-linha">' + c + '<div class="copia">' + c + '</div></div>';
   }).join('');
-  return `<table class="doc-notch">
-    <thead><tr><th>Parcela</th><th>Vencimento</th><th>Valor</th><th>Situação</th></tr></thead>
-    <tbody>${rows}</tbody>
-  </table>`;
+  return `<div class="carne"><p class="carne-intro">
+    CARNÊ DE PAGAMENTO — ${esc(aluno ? aluno.nome : '')} · ${esc(curso)} · ${N} parcela(s).
+    Recortar pelo tracejado e guardar os canhotos.
+  </p>${linhas}</div>`;
 }
 
 carregar().then(() => {
