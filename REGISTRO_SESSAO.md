@@ -1,6 +1,6 @@
 # Registro da Sessão — Escola de Música
 
-> Data: 21/09/2026 · Continuidade prevista para a próxima sessão.
+> Data: 21/09/2026 (atualizado 22/09/2026) · Continuidade prevista para a próxima sessão.
 
 Este documento registra tudo o que foi pedido, decidido e implementado nesta sessão, além dos problemas resolvidos, para retomada sem perda de contexto.
 
@@ -149,19 +149,42 @@ Motivo: forma dos formulários e falta de dashboard na home. Baseado em pesquisa
 
 ---
 
-## 9. Estado atual do projeto
+## 9. Etapa 5 — Financeiro (implementada; migração a aplicar)
+
+**Página nova:** `public/financeiro.html` + `public/js/financeiro.js` (RF23–RF30)
+
+- **RPC `gerar_mensalidades()`** (em `MIGRACAO_ETAPA5.sql`): gera mensalidade por mês para toda matrícula **ativa + mensal**, do mês de `data_inicio` até o mês atual, no valor da turma (`turmas.valor_mensal`) ou da matrícula individual. Guard **admin** dentro da função (RN01); marca `pendente → atrasada` quando `vencimento < CURRENT_DATE`. Índices únicos parciais (`uq_financeiro_mensalidade`, `uq_financeiro_avulsa`) impedem duplicidade.
+- **Aula avulsa (RN02):** triggers `AFTER INSERT`/`AFTER DELETE` em `conteudos_ministrados` (SECURITY DEFINER) criam a cobrança `aula_avulsa` no valor da aula (`matriculas.valor_aula`) e a **cancelam** (RN08: nunca apaga financeiro) quando a aula é excluída. Só para matrícula individual **avulsa**.
+- **Tela:** menu completo (navbar em todas as páginas), KPIs **A receber no mês / Recebido no mês / Em atraso**, filtros por status e competência (mês), total da lista, botões **Baixar** (data + forma: pix/cartão/dinheiro/boleto) e **Cancelar** por linha, modal **+ Novo lançamento** (ajuste/mensalidade/aula avulsa manual).
+- **Restrição:** se o perfil não for admin, a página mostra "Acesso restrito" (RF30); RLS de `financeiro` continua admin-only (já existia na Etapa 2).
+- **Menus:** link `Financeiro` ativo em todas as 7 páginas (antes `data-futuro`); `Relatórios` continua bloqueado (Etapa 6).
+
+**Banco — ⚠️ pendente de aplicar:**
+
+- `MIGRACAO_ETAPA5.sql` **NÃO aplicado ainda** → rodar no Supabase > SQL Editor:
+  1. índices únicos `uq_financeiro_mensalidade` / `uq_financeiro_avulsa`
+  2. função `gerar_mensalidades(date)` + `GRANT EXECUTE ... TO authenticated`
+  3. triggers `trig_financeiro_avulsa_insert` / `trig_financeiro_avulsa_delete`
+
+**Bug corrigido nesta sessão:** `popularInstrumentos(sb)` e `popularFormacoes()` em `professores.js`/`turmas.js` haviam sido colocados dentro do bloco de submit por engano; foram movidos para o **carregamento** da página (o `datalist` de instrumentos/formações não aparecia).
+
+**Validação:** todos os `public/js/*.js` passam em `node --check` (v24).
+
+---
+
+## 10. Estado atual do projeto
 
 Repositório: https://github.com/AdaoElias/escola-de-musica
 Site: https://escola-demusica.netlify.app
 Banco: Supabase (tabelas do SCHEMA.sql + migration RLS aplicadas)
 
 ```
-public/            → index(login), app(painel/dashboard), professores, alunos, turmas, matriculas, grade, aulas
-public/js/         → supabase.js, auth.js, ui.js, app.js, professores.js, alunos.js, turmas.js, matriculas.js, grade.js, aulas.js
+public/            → index(login), app(painel/dashboard), professores, alunos, turmas, matriculas, grade, aulas, financeiro
+public/js/         → supabase.js, auth.js, ui.js, app.js, professores.js, alunos.js, turmas.js, matriculas.js, grade.js, aulas.js, financeiro.js, instrumentos.js
 public/css/style.css (design system claro)
 functions/         → hello.js, health.js, client-config.js
 netlify.toml, .env.example, .env.local (não versionado)
-REQUISITOS.md, SCHEMA.sql, MIGRACAO_ETAPA2.sql, MIGRACAO_ETAPA4.sql, MIGRACAO_ENDERECO.sql, MIGRACAO_CPF_NASCIMENTO.sql
+REQUISITOS.md, SCHEMA.sql, MIGRACAO_ETAPA2.sql, MIGRACAO_ETAPA4.sql, MIGRACAO_ETAPA5.sql, MIGRACAO_ENDERECO.sql, MIGRACAO_CPF_NASCIMENTO.sql, MIGRACAO_FIX_RLS.sql
 ```
 
 **FIX (a aplicar no Supabase):** `MIGRACAO_FIX_RLS.sql` — funções `usuario_atual/administrador_atual/professor_atual` agora são `SECURITY DEFINER`. Sem isso, todo CRUD/logado estoura "stack depth limit exceeded" (recursão de RLS: função lê usuarios/professores → política da própria tabela chama a função de novo).
@@ -172,7 +195,7 @@ REQUISITOS.md, SCHEMA.sql, MIGRACAO_ETAPA2.sql, MIGRACAO_ETAPA4.sql, MIGRACAO_EN
 
 ---
 
-## 10. Próximos passos
+## 11. Próximos passos
 
 - ✅ **Etapa 0** requesitos/diagrama
 - ✅ **Etapa 1** ambiente (GitHub/Supabase/Netlify)
@@ -180,10 +203,11 @@ REQUISITOS.md, SCHEMA.sql, MIGRACAO_ETAPA2.sql, MIGRACAO_ETAPA4.sql, MIGRACAO_EN
 - ✅ **Etapa 3** alunos + turmas + matrículas
 - ✅ **Etapa 4** grade + aulas + progresso/desempenho (falta aplicar MIGRACAO_ETAPA4.sql)
 - ✅ **Redesign** dashboard + base de design (Etapa 4.5) — Etapas 5/6 devem usar `.kpi/.alert/.badge/.toast/modal` já existentes
-- ⏭️ **Etapa 5** Financeiro (mensal primeiro; avulsa = geração automática ao lançar aula) + inadimplência
+- ✅ **Etapa 5** Financeiro (mensal via RPC + avulsa automática ao lançar aula) + inadimplência (KPIs) — **falta aplicar MIGRACAO_ETAPA5.sql**
 - ⏭️ **Etapa 6** Gráficos: desempenho da turma, por aluno, financeiro (views `vw_*` já prontas no SCHEMA.sql)
 
 **Pendências anotadas:**
+- ⚠️ Aplicar `MIGRACAO_ETAPA5.sql` no Supabase (financeiro: RPC + triggers) — necessário para o módulo funcionar
 - ⚠️ Aplicar `MIGRACAO_ETAPA4.sql` no Supabase (views de progresso)
 - Excluir/ajustar conta `teste@escola.com` e criar e-mail definitivo de admin (ou manter, se preferir)
 - Avaliar liberação: professor acessa só com conta vinculada (`professores.usuario_id`)

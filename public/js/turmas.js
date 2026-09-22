@@ -114,8 +114,7 @@ form.addEventListener('submit', async (e) => {
   }
   modal.close();
   toast(editando ? 'Turma atualizada.' : 'Turma criada.');
-carregar();
-popularInstrumentos(sb);
+  carregar();
 });
 
 tbody.addEventListener('click', async (e) => {
@@ -136,3 +135,4 @@ tbody.addEventListener('click', async (e) => {
 if (!admin) document.getElementById('novo').hidden = true;
 await carregarProfessores();
 carregar();
+popularInstrumentos(sb);

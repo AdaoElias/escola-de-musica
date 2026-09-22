@@ -138,8 +138,7 @@ form.addEventListener('submit', async (e) => {
   }
   modal.close();
   toast(editando ? 'Professor atualizado.' : 'Professor cadastrado.');
-carregar();
-popularInstrumentos(sb);
+  carregar();
 });
 
 tbody.addEventListener('click', async (e) => {
@@ -163,3 +162,4 @@ if (!me || me.perfil !== 'admin') {
 }
 
 carregar();
+popularInstrumentos(sb);
