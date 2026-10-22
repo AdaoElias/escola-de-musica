@@ -825,9 +825,8 @@ local `escola_sec` (PostgreSQL 16 desta máquina) tem só o `SEED_DEMO` (5 profs
 - 🔴 **Conferir a contagem de registros** no SQL Editor (roda como `postgres`; o `anon` não lê por
   RLS) — §20.2.
 - 🟡 **Trocar a senha temporária** da conta admin `adaoelias@gmail.com`.
-- 🟡 **Commit**: nada foi commitado desde 22/09 — 20 arquivos modificados e ~25 novos
-  (`INSTALAR.sql`, `INSTALAR_SUPABASE/`, `historico/`, `testes/`, `scripts/`, `.github/`,
-  `functions/criar-acesso.js`, `public/redefinir.html`, `public/js/vendor/`, `SEED_DEMO.sql`).
+- ✅ **Commit + push**: 6 commits em blocos lógicos enviados a `origin/main` em 22/10/2026
+  (`93945ff`, `09491ef`, `9b77901`, `2b14593`, `34c4827`, `5b53188`) — árvore limpa, sincronizado.
 - 🟡 **Higiene do repositório:** 12 PNGs de tela na raiz e 2 `.docx` duplicados de documentação —
   definir o destino (ex.: `docs/telas/`) e deixar uma versão canônica.
 - ⚪ `functions/criar-acesso.js` suporta `acao: 'vincular'` (conta já existente no Auth), mas o
