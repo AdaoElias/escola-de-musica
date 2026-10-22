@@ -4,3 +4,8 @@ node_modules/
 .env.local
 dist/
 *.log
+
+# Backups do banco (contem dados pessoais - RNF04/RNF06 LGPD).
+# O dump NAO deve ser versionado: versione os scripts em scripts/.
+backups/
+*.sql.gz
