@@ -1,0 +1,33 @@
+-- ============================================================
+-- INSTALAR.sql - Escola de Música
+-- Instalação COMPLETA e idempotente do banco.
+-- ============================================================
+-- COMO USAR
+--   Base nova  : Supabase > SQL Editor > New query > colar tudo > Run.
+--   Base velha : rode o BLOCO 0 (enums) e clique em Run; depois cole do
+--                BLOCO 1 em diante e clique em Run novamente.
+--                (o Bloco 0 só é separado porque o Postgres não aceita
+--                 usar um valor de enum recém-adicionado na mesma transação)
+--
+-- IDEMPOTÊNCIA
+--   Pode ser executado quantas vezes quiser: nada é duplicado, nada quebra.
+--   Tabelas usam CREATE TABLE IF NOT EXISTS; colunas, ADD COLUMN IF NOT EXISTS;
+--   constraints e policies são recriados com DROP ... IF EXISTS + CREATE;
+--   funções e views usam CREATE OR REPLACE; triggers usam DROP ... IF EXISTS.
+--
+-- CONTEÚDO (= estado final do banco)
+--   0) Enums
+--   1) Tabelas
+--   2) Colunas adicionadas depois (idempotente)
+--   3) Constraints nomeadas
+--   4) Índices
+--   5) Funções auxiliares de RLS (SECURITY DEFINER)
+--   6) RLS + políticas
+--   7) Regras de negócio: RPCs e triggers de financeiro
+--   8) Views de relatórios
+--   9) Grants
+--  10) Checagem final
+-- ============================================================
+
+
+-- ============================================================

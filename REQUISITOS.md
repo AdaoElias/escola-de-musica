@@ -92,6 +92,9 @@ Aplicação web para gerenciar uma escola de música com turmas coletivas e aula
 - **RNF02** Segurança: autenticação + **Row Level Security (RLS)** no banco — cada perfil vê apenas seus dados.
 - **RNF03** Custo: permanecer nos planos gratuitos Netlify + Supabase.
 - **RNF04** Backup automático do Supabase (há opção no plano free) + exportação local.
+  Procedimento versionado em [`scripts/`](scripts/README.md) (`backup.ps1` / `backup.sh` com
+  rotação, `restaurar.ps1` com verificação). O dump **não** é versionado: contém dados pessoais
+  (RNF06) — ver `.gitignore`.
 - **RNF05** Performance: carregar relatórios via **views SQL** no banco (não filtrar tudo no front).
 - **RNF06** LGPD: dados pessoais de alunos tratados como sensíveis; acesso restrito.
 
@@ -108,6 +111,11 @@ Aplicação web para gerenciar uma escola de música com turmas coletivas e aula
 - **RN07** Aluno pode ter regime **mensal** em uma turma e regime **avulsa** no individual, simultaneamente (decisão registrada por matrícula).
 - **RN08** Excluir registros **nunca apaga** financeiro já lançado — lançamento cancelado fica com status `cancelada`.
 - **RN09** Atrasado = `pendente` com `vencimento < hoje`.
+- **RN10** **Desconto/crédito** (RF29) é lançado como `ajuste` com **valor negativo**; `mensalidade` e `aula_avulsa` nunca podem ter valor negativo. Ajustes não contam como inadimplência.
+- **RN11** **CPF é único por pessoa** (aluno e professor) e deve ter **dígitos verificadores válidos**; o CPF do responsável **não** é único (o mesmo responsável pode ter vários filhos).
+- **RN12** Aluno não repete **matrícula individual** com o mesmo professor (uma matrícula individual por aluno+professor).
+- **RN13** O **vencimento** da cobrança é sempre o `dia_vencimento` da matrícula dentro da competência — mensal e carnê seguem a mesma regra.
+- **RN14** **Turma ativa exige professor ativo**: um professor só pode ser inativado se não tiver turma ativa; conversely, uma turma só pode ser ativada com professor ativo. O front avisa antes de tentar; o banco bloqueia a operação (triggers `trig_professores_bloqueia_inativacao` e `trig_turmas_exige_professor_ativo`).
 
 ---
 
@@ -151,15 +159,15 @@ erDiagram
 
 | Tabela | Finalidade | Campos principais |
 |---|---|---|
-| `usuarios` | Login e perfis | nome, email (único), senha_hash, perfil (`admin`/`professor`), ativo |
-| `professores` | Cadastro | usuario_id (opc.), nome, instrumento, email, telefone, formacao, ativo |
-| `alunos` | Cadastro | nome, telefone, email, observacao, ativo |
+| `usuarios` | Login e perfis | nome, email (único), perfil (`admin`/`professor`), ativo. `senha_hash` existe mas está **em desuso** (a senha é gerenciada pelo Supabase Auth) |
+| `professores` | Cadastro | usuario_id (opc.), nome, instrumento, email, telefone, formacao, cpf (único, dígitos validados), ativo |
+| `alunos` | Cadastro | nome, telefone, email, observacao, cpf (único, dígitos validados), responsavel_cpf (não único), ativo |
 | `turmas` | Turmas coletivas | nome, instrumento, professor_id, dia_semana, horario, valor_mensal, status |
 | `matriculas` | Vínculo aluno↔turma/individual | aluno_id, turma_id (opc.), tipo (`turma`/`individual`), professor_id (individual), tipo_pagamento (`mensal`/`avulsa`), valor_mensal, valor_aula, status, data_inicio |
-| `grade_conteudos` | Grade padrão | titulo, descricao, modulo, nivel, ordem, tempo_estimado, ativo |
+| `grade_conteudos` | Grade padrão | titulo, descricao, modulo, nivel, ordem, tempo_estimado (INTERVAL, gravado em **minutos**: `PT30M`; 0 < valor ≤ 12h), ativo |
 | `conteudos_ministrados` | Aulas dadas | turma_id/aluno vínculo, professor_id, grade_id (opc.), data_aula, titulo, descricao, evolucao_turma (%), observacoes |
 | `desempenhos` | Nota por aluno (opcional) | aluno_id, conteudo_id, desempenho (0–100), avaliacao, data |
-| `financeiro` | Lançamentos (a receber/recebidos) | aluno_id, matricula_id (opc.), tipo (`mensalidade`/`aula_avulsa`/`ajuste`), descricao, valor, vencimento, competencia, status (`pendente`/`paga`/`atrasada`/`cancelada`), data_pagamento, forma_pagamento |
+| `financeiro` | Lançamentos (a receber/recebidos) | aluno_id, matricula_id (opc.), tipo (`mensalidade`/`aula_avulsa`/`ajuste`), descricao, valor (negativo só em `ajuste`), vencimento, competencia, status (`pendente`/`paga`/`atrasada`/`cancelada`), data_pagamento, forma_pagamento |
 
 ---
 
@@ -169,14 +177,50 @@ erDiagram
 - `vw_desempenho_aluno` — evolução por aluno (gráfico RF32).
 - `vw_financeiro_resumo` — previsto (pendente) vs. recebido (pago) por competência (gráfico RF33 e RF28).
 
-Detalhe em SQL no arquivo `SCHEMA.sql`.
+Detalhe em SQL no arquivo `INSTALAR.sql`.
+
+---
+
+## 9.1 Instalação do Banco
+
+**Fonte única: `INSTALAR.sql`** (script completo e idempotente — pode ser executado quantas vezes quiser).
+
+- **Base nova:** Supabase > SQL Editor > colar `INSTALAR.sql` > Run. Cria tabelas, enums, constraints, índices, funções de RLS, políticas, RPCs de financeiro, triggers e views.
+- **Base já existente:** rode o Bloco 0 (enums) e depois o restante — o script normaliza o schema (renomeia constraints para nomes determinísticos e remove regras duplicadas).
+- **Por partes:** [`INSTALAR_SUPABASE/`](INSTALAR_SUPABASE/README.md) tem o mesmo script em 11 blocos prontos para colar (guia com ordem, conferência e troubleshooting).
+- **Dados de teste (opcional):** `SEED_TESTE.sql` (idempotente) — 10 professores, 10 turmas, 30 alunos, 30 matrículas e parcelas de carnê.
+
+**Regras que não travam a instalação:** os CHECKs de CPF são criados como `NOT VALID` e os índices únicos de CPF só são criados se não houver CPF repetido. Em base legada com dados inconsistentes, o `INSTALAR.sql` **avisa** (em vez de falhar) e indica o comando de correção:
+
+```sql
+-- localizar CPFs duplicados
+SELECT 'alunos' AS tabela, regexp_replace(cpf,'[^0-9]','','g') AS cpf, count(*)
+  FROM public.alunos WHERE cpf IS NOT NULL GROUP BY 1,2 HAVING count(*) > 1;
+-- localizar CPFs com dígitos inválidos
+SELECT * FROM public.alunos WHERE cpf IS NOT NULL AND NOT public.cpf_valido(cpf);
+```
+
+Depois de corrigir, rode o `INSTALAR.sql` novamente — os índices e CHECKs são criados.
+
+Os arquivos `historico/SCHEMA.sql` e `historico/MIGRACAO_*.sql` são **memória do processo**: foram
+usados para montar o banco existente e **não** devem ser aplicados. Nenhum novo ambiente deve
+usá-los — use `INSTALAR.sql`. O quadro de estado de cada arquivo está em
+[`historico/README.md`](historico/README.md).
+
+### Testes e operação
+
+| Onde | O quê |
+|---|---|
+| [`testes/`](testes/README.md) | Suíte de regressão do banco (base nova + base legada) — `.\testes\run.ps1` (Windows) ou `./testes/run.sh` (Linux) |
+| `.github/workflows/testes.yml` | CI: roda a suíte em cada push/PR (PostgreSQL 16) + `node --check` de todo o JS |
+| [`scripts/`](scripts/README.md) | Backup e restauração do banco (RNF04) |
 
 ---
 
 ## 10. Próximos Passos
 
 1. **Etapa 1:** preparar ambiente (GitHub + Netlify + Supabase) e subir "Olá mundo".
-2. **Etapa 2:** aplicar `SCHEMA.sql`, criar autenticação e RLS.
+2. **Etapa 2:** aplicar `INSTALAR.sql` (autenticação, RLS, regras de negócio e views).
 3. **Etapa 3 (MVP):** cadastros (professor/aluno/turma) + matrículas.
 4. **Etapa 4:** grade + lançamento de aulas (sem financeiro).
 5. **Etapa 5:** financeiro (mensal primeiro; avulsa na fase 2).

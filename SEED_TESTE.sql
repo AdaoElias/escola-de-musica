@@ -5,9 +5,58 @@
 -- ============================================================
 
 -- Turma agora pode ser parcelada (carnê 1/6/12x), não só mensal
+-- Os CHECKs usam nome determinístico (ver INSTALAR.sql); os de nome automático
+-- das versões antigas são removidos para não deixar regras duplicadas.
+ALTER TABLE public.matriculas DROP CONSTRAINT IF EXISTS matriculas_check;
+ALTER TABLE public.matriculas DROP CONSTRAINT IF EXISTS matriculas_check1;
 ALTER TABLE public.matriculas DROP CONSTRAINT IF EXISTS matriculas_check2;
-ALTER TABLE public.matriculas ADD CONSTRAINT matriculas_check2
-  CHECK (tipo <> 'turma' OR tipo_pagamento::text IN ('mensal', 'parcelado'));
+ALTER TABLE public.matriculas DROP CONSTRAINT IF EXISTS matriculas_parcelas_check;
+ALTER TABLE public.matriculas DROP CONSTRAINT IF EXISTS matriculas_dia_vencimento_check;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'matriculas_check_pagamento') THEN
+    ALTER TABLE public.matriculas ADD CONSTRAINT matriculas_check_pagamento
+      CHECK (tipo <> 'turma' OR tipo_pagamento::text IN ('mensal', 'parcelado'));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'matriculas_check_parcelas') THEN
+    ALTER TABLE public.matriculas ADD CONSTRAINT matriculas_check_parcelas
+      CHECK (parcelas IS NULL OR parcelas IN (1, 6, 12));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'matriculas_check_dia_vencimento') THEN
+    ALTER TABLE public.matriculas ADD CONSTRAINT matriculas_check_dia_vencimento
+      CHECK (dia_vencimento BETWEEN 1 AND 28);
+  END IF;
+END $$;
+
+-- Gera um CPF válido (dígitos verificadores corretos) a partir de uma base de 9 dígitos.
+-- Usado só pelo seed; o banco valida o CPF em public.cpf_valido (INSTALAR.sql).
+CREATE OR REPLACE FUNCTION public.seed_cpf(base9 TEXT) RETURNS TEXT
+LANGUAGE plpgsql IMMUTABLE AS $$
+DECLARE
+  d    TEXT := lpad(base9, 9, '0');
+  soma INT;
+  dv   INT;
+BEGIN
+  soma := 0;
+  FOR i IN 1..9 LOOP
+    soma := soma + substr(d, i, 1)::INT * (11 - i);
+  END LOOP;
+  dv := (soma * 10) % 11;
+  IF dv = 10 THEN dv := 0; END IF;
+  d := d || dv::TEXT;
+
+  soma := 0;
+  FOR i IN 1..10 LOOP
+    soma := soma + substr(d, i, 1)::INT * (12 - i);
+  END LOOP;
+  dv := (soma * 10) % 11;
+  IF dv = 10 THEN dv := 0; END IF;
+  d := d || dv::TEXT;
+
+  RETURN regexp_replace(d, '(\d{3})(\d{3})(\d{3})(\d{2})', '\1.\2.\3-\4');
+END;
+$$;
 
 DO $$
 DECLARE
@@ -37,7 +86,7 @@ BEGIN
       INSERT INTO public.professores (nome, cpf, nascimento, instrumento, email, telefone, formacao, endereco, bairro, cidade, cep, ativo)
       VALUES (
         profs[i],
-        regexp_replace(lpad((i * 7919)::text, 11, '0'), '([0-9]{3})([0-9]{3})([0-9]{3})([0-9]{2})', '\1.\2.\3-\4'),
+        public.seed_cpf(lpad((i * 7919)::text, 9, '0')),
         to_date('1985-01-01','YYYY-MM-DD') + (i * 41),
         instr[i],
         'prof' || i || '@escola.com',
@@ -72,12 +121,12 @@ BEGIN
   FOR i IN 1..30 LOOP
     SELECT id INTO aid FROM public.alunos WHERE nome = alunos_n[i];
     IF aid IS NULL THEN
-      rg_x := lpad((i * 6163)::text, 11, '0');
-      INSERT INTO public.alunos (nome, cpf, nascimento, telefone, email, endereco, bairro, cidade, cep, observacao, ativo,
-                                 responsavel_nome, responsavel_cpf, responsavel_telefone, parentesco)
-      VALUES (
+        rg_x := lpad((i * 6163)::text, 9, '0');
+        INSERT INTO public.alunos (nome, cpf, nascimento, telefone, email, endereco, bairro, cidade, cep, observacao, ativo,
+                                   responsavel_nome, responsavel_cpf, responsavel_telefone, parentesco)
+        VALUES (
         alunos_n[i],
-        regexp_replace(rg_x, '([0-9]{3})([0-9]{3})([0-9]{3})([0-9]{2})', '\1.\2.\3-\4'),
+        public.seed_cpf(rg_x),
         (CASE WHEN i = ANY(menores) THEN to_date('2010-01-01','YYYY-MM-DD') + (i * 140) ELSE to_date('1998-01-01','YYYY-MM-DD') + (i * 210) END),
         '(11) 9' || lpad((9000 + i * 173)::text, 8, '0'),
         'aluno' || i || '@escola.com',
@@ -91,7 +140,7 @@ BEGIN
           resp_n[array_position(menores, i)]::text
         ELSE NULL END),
         (CASE WHEN i = ANY(menores) THEN
-          regexp_replace(lpad((i * 4444)::text, 11, '0'), '([0-9]{3})([0-9]{3})([0-9]{3})([0-9]{2})', '\1.\2.\3-\4')
+          public.seed_cpf(lpad((i * 4444)::text, 9, '0'))
         ELSE NULL END),
         (CASE WHEN i = ANY(menores) THEN '(11) 9' || lpad((8000 + i * 61)::text, 8, '0') ELSE NULL END),
         (CASE WHEN i = ANY(menores) THEN (CASE WHEN i % 2 = 0 THEN 'mae' ELSE 'pai' END) ELSE NULL END)
@@ -207,3 +256,6 @@ BEGIN
 
   RAISE NOTICE 'Seed concluído: professors=10, turmas=10, alunos=30, matriculas=30 (parcelas de carnê geradas).';
 END $$;
+
+-- A função auxiliar do seed não é usada em produção.
+DROP FUNCTION IF EXISTS public.seed_cpf(TEXT);
