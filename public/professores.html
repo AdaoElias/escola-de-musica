@@ -32,7 +32,7 @@
     <div class="tabela-wrap">
       <table class="tabela">
         <thead>
-          <tr><th>Nome</th><th>CPF</th><th>Nascimento</th><th>Instrumento</th><th>E-mail</th><th>Telefone</th><th>Cidade</th><th>Status</th><th>Ações</th></tr>
+          <tr><th>Nome</th><th>CPF</th><th>Nascimento</th><th>Instrumento</th><th>E-mail</th><th>Telefone</th><th>Cidade</th><th>Acesso</th><th>Status</th><th>Ações</th></tr>
         </thead>
         <tbody id="tbody"></tbody>
       </table>
@@ -72,6 +72,9 @@
           <label class="check">
             <input type="checkbox" id="ativo" checked> Ativo
           </label>
+
+          <div class="form-section">Acesso ao sistema</div>
+          <div id="acesso-box" class="acesso-box"></div>
         <datalist id="lista-instrumentos"></datalist>
           <datalist id="lista-formacoes"></datalist>
         </div>

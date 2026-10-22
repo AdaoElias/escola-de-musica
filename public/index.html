@@ -22,16 +22,40 @@
         <input type="password" id="senha" required autocomplete="current-password" placeholder="••••••••">
       </label>
       <p class="error" id="erro" role="alert"></p>
+      <p class="sub" id="msg" style="margin-top:-0.5rem; min-height:1rem;"></p>
       <button type="submit" id="btn">Entrar</button>
     </form>
+
+    <p class="login-links"><button type="button" class="link" id="esqueci">Esqueci minha senha</button></p>
   </main>
 
   <script type="module">
-    import { login } from '/js/auth.js';
+    import { login, recuperarSenha } from '/js/auth.js';
 
     const form = document.getElementById('login-form');
     const btn = document.getElementById('btn');
     const erro = document.getElementById('erro');
+    const msg = document.getElementById('msg');
+    const esqueci = document.getElementById('esqueci');
+
+    esqueci.addEventListener('click', async () => {
+      erro.textContent = '';
+      msg.textContent = '';
+      const email = document.getElementById('email').value.trim();
+      if (!email) {
+        erro.textContent = 'Informe seu e-mail para recuperar a senha.';
+        document.getElementById('email').focus();
+        return;
+      }
+      esqueci.disabled = true;
+      const err = await recuperarSenha(email);
+      esqueci.disabled = false;
+      if (err) {
+        erro.textContent = 'Erro: ' + (err.message || 'não foi possível enviar.');
+      } else {
+        msg.textContent = 'Se este e-mail estiver cadastrado, enviamos um link para redefinir a senha.';
+      }
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();

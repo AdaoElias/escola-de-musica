@@ -6,6 +6,14 @@ export async function login(email, senha) {
   return error;
 }
 
+export async function recuperarSenha(email) {
+  const sb = await getSupabase();
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/redefinir.html',
+  });
+  return error;
+}
+
 export async function logout() {
   const sb = await getSupabase();
   await sb.auth.signOut();

@@ -399,6 +399,13 @@ button.x:hover { background: var(--bg-card); color: var(--texto); }
 .graf-legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
 .graf-legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
 
+/* ---------- Acesso do professor (modal) ---------- */
+.acesso-box { display: flex; flex-direction: column; gap: 0.6rem; }
+.acesso-box .recentes-sub { font-size: 0.82rem; color: var(--texto2); font-weight: 400; }
+
+/* ---------- Login: links de apoio ---------- */
+.login-links { margin-top: 1rem; display: flex; justify-content: center; }
+
 /* ---------- Responsivo ---------- */
 .tabela-wrap { overflow-x: auto; }
 @media (max-width: 768px) {
