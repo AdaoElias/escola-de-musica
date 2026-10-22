@@ -1,5 +1,5 @@
 import { guard, logout, perfil } from './auth.js';
-import { toast, ligaFecharModais, buscarCep, ligaMascaraTelefone, emailValido, ligaMascaraCpf, formatarCpf, formatarDataBr } from './ui.js';
+import { toast, ligaFecharModais, buscarCep, ligaMascaraTelefone, emailValido, ligaMascaraCpf, formatarCpf, formatarDataBr, cpfValido, erroAmigo } from './ui.js';
 
 const sb = await guard();
 if (!sb) throw new Error('redirecionado');
@@ -34,6 +34,7 @@ function responsavelObrigatorio() {
   const telefone = document.getElementById('responsavel_telefone').value.trim();
   if (!nome) { erro.textContent = 'Menor de idade exige o nome do responsável.'; return false; }
   if (!cpf || cpf.replace(/\D/g, '').length !== 11) { erro.textContent = 'Menor de idade exige o CPF do responsável.'; return false; }
+  if (!cpfValido(cpf)) { erro.textContent = 'CPF do responsável inválido (dígitos verificadores não conferem).'; return false; }
   if (!telefone) { erro.textContent = 'Menor de idade exige o telefone do responsável.'; return false; }
   return true;
 }
@@ -159,6 +160,16 @@ form.addEventListener('submit', async (e) => {
     salvarBtn.disabled = false;
     return;
   }
+  if (dados.cpf && !cpfValido(dados.cpf)) {
+    erro.textContent = 'CPF do aluno inválido (dígitos verificadores não conferem).';
+    salvarBtn.disabled = false;
+    return;
+  }
+  if (dados.responsavel_cpf && !cpfValido(dados.responsavel_cpf)) {
+    erro.textContent = 'CPF do responsável inválido (dígitos verificadores não conferem).';
+    salvarBtn.disabled = false;
+    return;
+  }
   if (menorDeIdade(dados.nascimento) && !responsavelObrigatorio()) {
     salvarBtn.disabled = false;
     return;
@@ -169,7 +180,7 @@ form.addEventListener('submit', async (e) => {
     : await sb.from('alunos').insert(dados);
 
   if (error) {
-    erro.textContent = 'Erro: ' + error.message;
+    erro.textContent = erroAmigo(error);
     salvarBtn.disabled = false;
     return;
   }

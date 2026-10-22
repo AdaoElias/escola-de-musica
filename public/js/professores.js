@@ -1,5 +1,5 @@
 import { guard, logout, perfil } from './auth.js';
-import { toast, ligaFecharModais, buscarCep, ligaMascaraTelefone, emailValido, ligaMascaraCpf, formatarCpf, formatarDataBr } from './ui.js';
+import { toast, ligaFecharModais, buscarCep, ligaMascaraTelefone, emailValido, ligaMascaraCpf, formatarCpf, formatarDataBr, cpfValido, erroAmigo } from './ui.js';
 import { popularInstrumentos, popularFormacoes } from './instrumentos.js';
 
 const sb = await guard();
@@ -33,6 +33,7 @@ async function carregar() {
       <td>${p.email || '—'}</td>
       <td>${p.telefone || '—'}</td>
       <td>${p.cidade || '—'}</td>
+      <td>${p.usuario_id ? '<span class="badge b-ok">Vinculado</span>' : '<span class="badge b-mut">Sem acesso</span>'}</td>
       <td>${p.ativo ? '<span class="badge b-ok">Ativo</span>' : '<span class="badge b-mut">Inativo</span>'}</td>
       <td class="acoes">
         ${p.ativo ? '<button class="mini" data-editar="' + p.id + '">Editar</button>' : ''}
@@ -41,13 +42,13 @@ async function carregar() {
     tbody.appendChild(tr);
   }
   if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="9" class="empty">Nenhum professor cadastrado ainda.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" class="empty">Nenhum professor cadastrado ainda.</td></tr>';
   }
 }
 
 function mostrarErroTabela(msg) {
   const tr = document.createElement('tr');
-  tr.innerHTML = '<td colspan="9" class="error">Erro ao carregar: ' + msg + '</td>';
+  tr.innerHTML = '<td colspan="10" class="error">Erro ao carregar: ' + msg + '</td>';
   tbody.appendChild(tr);
 }
 
@@ -69,7 +70,27 @@ function abrirModal(prof = null) {
   document.getElementById('bairro').value = prof ? (prof.bairro || '') : '';
   document.getElementById('cidade').value = prof ? (prof.cidade || '') : '';
   document.getElementById('ativo').checked = prof ? prof.ativo : true;
+  renderAcesso(prof);
   modal.showModal();
+}
+
+function renderAcesso(prof) {
+  const box = document.getElementById('acesso-box');
+  if (prof && prof.usuario_id) {
+    box.innerHTML = '<span class="badge b-ok">Acesso vinculado</span> '
+      + '<span class="recentes-sub">Este professor já pode entrar no sistema.</span>';
+    return;
+  }
+  box.innerHTML = `
+    <label class="check"><input type="checkbox" id="criar-acesso"> Criar acesso para este professor</label>
+    <label class="field" id="senha-acesso-campo" hidden>Senha temporária
+      <input type="password" id="senha-acesso" minlength="6" autocomplete="new-password">
+      <small>mínimo de 6 caracteres — o professor pode trocar depois em "Senha"</small>
+    </label>
+    <p class="sub">O acesso usa o e-mail informado acima. Sem e-mail não é possível criar.</p>`;
+  const chk = box.querySelector('#criar-acesso');
+  const campo = box.querySelector('#senha-acesso-campo');
+  chk.addEventListener('change', () => { campo.hidden = !chk.checked; });
 }
 
 async function preencherEndereco() {
@@ -126,18 +147,67 @@ form.addEventListener('submit', async (e) => {
     salvarBtn.disabled = false;
     return;
   }
-
-  const { error } = editando
-    ? await sb.from('professores').update(dados).eq('id', editando.id)
-    : await sb.from('professores').insert(dados);
-
-  if (error) {
-    erro.textContent = 'Erro: ' + error.message;
+  if (dados.cpf && !cpfValido(dados.cpf)) {
+    erro.textContent = 'CPF do professor inválido (dígitos verificadores não conferem).';
     salvarBtn.disabled = false;
     return;
   }
+
+  const chkAcesso = document.getElementById('criar-acesso');
+  const criarAcesso = !!(chkAcesso && chkAcesso.checked);
+  const senhaAcesso = criarAcesso ? (document.getElementById('senha-acesso').value || '') : '';
+  if (criarAcesso) {
+    if (!dados.email) {
+      erro.textContent = 'Informe o e-mail para criar o acesso.';
+      salvarBtn.disabled = false;
+      return;
+    }
+    if (senhaAcesso.length < 6) {
+      erro.textContent = 'A senha temporária deve ter ao menos 6 caracteres.';
+      salvarBtn.disabled = false;
+      return;
+    }
+  }
+
+  const salvo = editando
+    ? await sb.from('professores').update(dados).eq('id', editando.id).select('id').single()
+    : await sb.from('professores').insert(dados).select('id').single();
+
+  if (salvo.error) {
+    erro.textContent = erroAmigo(salvo.error);
+    salvarBtn.disabled = false;
+    return;
+  }
+  const professorId = editando ? editando.id : salvo.data.id;
+
+  if (criarAcesso) {
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const resp = await fetch('/api/criar-acesso', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + (session ? session.access_token : ''),
+        },
+        body: JSON.stringify({
+          professor_id: professorId,
+          email: dados.email,
+          senha: senhaAcesso,
+          acao: 'criar',
+        }),
+      });
+      const j = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(j.error || 'Falha ao criar o acesso.');
+    } catch (err) {
+      erro.textContent = 'Professor salvo, mas o acesso falhou: ' + err.message;
+      salvarBtn.disabled = false;
+      carregar();
+      return;
+    }
+  }
+
   modal.close();
-  toast(editando ? 'Professor atualizado.' : 'Professor cadastrado.');
+  toast(criarAcesso ? 'Professor e acesso criados.' : (editando ? 'Professor atualizado.' : 'Professor cadastrado.'));
   carregar();
 });
 
@@ -150,10 +220,21 @@ tbody.addEventListener('click', async (e) => {
     abrirModal(prof);
   } else if (btnInativar) {
     const id = Number(btnInativar.dataset.inativar);
-    const ok = confirm('Inativar este professor?');
-    if (!ok) return;
+    // RN14: nao inativar professor com turma ativa; avisar sobre matriculas ativas.
+    const { data: turmas } = await sb.from('turmas').select('id, nome, status').eq('professor_id', id).eq('status', 'ativa');
+    if (turmas && turmas.length) {
+      toast('Este professor tem ' + turmas.length + ' turma(s) ativa(s). Encerre ou transfira as turmas antes de inativar.', 'erro');
+      return;
+    }
+    const { data: mats } = await sb.from('matriculas').select('id').eq('professor_id', id).eq('status', 'ativa');
+    const qtdMats = (mats || []).length;
+    const msg = qtdMats
+      ? 'Inativar este professor? Ele ainda tem ' + qtdMats + ' matricula(s) ativa(s) que continuam vinculadas.'
+      : 'Inativar este professor?';
+    if (!confirm(msg)) return;
     const { error } = await sb.from('professores').update({ ativo: false }).eq('id', id);
-    if (!error) carregar();
+    if (error) toast(erroAmigo(error), 'erro');
+    else { toast('Professor inativado.'); carregar(); }
   }
 });
 

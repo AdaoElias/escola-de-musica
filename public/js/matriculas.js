@@ -141,6 +141,30 @@ function mostrarErroTabela(msg) {
   tbody.appendChild(tr);
 }
 
+// Impede matrícula duplicada antes de gravar (o banco também bloqueia).
+// Turma: mesmo aluno na mesma turma. Individual: mesmo aluno com o mesmo professor.
+async function validarDuplicidade(dados) {
+  let q = sb.from('matriculas').select('id, status').eq('aluno_id', dados.aluno_id).eq('tipo', dados.tipo);
+  if (dados.tipo === 'turma') {
+    q = q.eq('turma_id', dados.turma_id);
+  } else {
+    q = q.is('turma_id', null).eq('professor_id', dados.professor_id);
+  }
+  if (editando) q = q.neq('id', editando.id);
+  const { data, error } = await q.limit(1);
+  if (error || !data || !data.length) return null;
+  const existente = data[0];
+  const status = existente.status === 'trancada' ? 'trancada' : existente.status === 'concluida' ? 'concluída' : 'ativa';
+  const reativar = status !== 'ativa'
+    ? ' Abra a matrícula existente e mude o status para "ativa" em vez de criar outra.'
+    : '';
+  return {
+    mensagem: dados.tipo === 'turma'
+      ? 'Este aluno já está matriculado nesta turma (' + status + ').' + reativar
+      : 'Este aluno já tem matrícula individual com este professor (' + status + ').' + reativar,
+  };
+}
+
 function abrirModal(m = null) {
   erro.textContent = '';
   salvarBtn.disabled = false;
@@ -214,6 +238,12 @@ form.addEventListener('submit', async (e) => {
     salvarBtn.disabled = false;
     return;
   }
+  const duplicada = await validarDuplicidade(dados);
+  if (duplicada) {
+    erro.textContent = duplicada.mensagem;
+    salvarBtn.disabled = false;
+    return;
+  }
 
   let resultado;
   if (editando) {
@@ -222,7 +252,9 @@ form.addEventListener('submit', async (e) => {
     resultado = await sb.from('matriculas').insert(dados).select().single();
   }
   if (resultado.error) {
-    erro.textContent = 'Erro: ' + resultado.error.message;
+    erro.textContent = resultado.error.code === '23505'
+      ? 'Matrícula duplicada: este aluno já está registrado nesta turma / com este professor.'
+      : 'Erro: ' + resultado.error.message;
     salvarBtn.disabled = false;
     return;
   }

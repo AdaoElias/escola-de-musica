@@ -55,6 +55,46 @@ export function formatarCpf(cpf) {
   return d ? d.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2})$/, '$1.$2.$3-$4') : '';
 }
 
+// Traduz erros do Postgres (Supabase) em mensagens amigáveis.
+export function erroAmigo(error) {
+  const msg = (error && error.message) || String(error || '');
+  const codigo = (error && error.code) || (msg.match(/([0-9A-Z]{5}):/) || [])[1] || '';
+  if (codigo === '23505') {
+    if (msg.includes('cpf')) return 'Já existe um cadastro com este CPF.';
+    if (msg.includes('email')) return 'Já existe um cadastro com este e-mail.';
+    if (msg.includes('matricula')) return 'Matrícula duplicada: este aluno já está registrado nesta turma / com este professor.';
+    return 'Registro duplicado.';
+  }
+  if (codigo === '23514') {
+    if (msg.includes('cpf_valido')) return 'CPF inválido (dígitos verificadores não conferem).';
+    if (msg.includes('financeiro_check_valor')) return 'Valor inválido para este tipo de lançamento.';
+    return 'Valor ou campo inválido para esta operação.';
+  }
+  if (codigo === '23503') return 'Registro vinculado não existe.';
+  if (msg.includes('turma(s) ativa(s)') || msg.includes('Turma ativa exige professor ativo')) {
+    return 'Regra de turmas: só é possível inativar um professor sem turmas ativas, e turma ativa exige professor ativo. Encerre ou transfira a turma.';
+  }
+  return 'Erro: ' + msg;
+}
+
+// Valida os dígitos verificadores do CPF (aceita vazio = ok).
+export function cpfValido(valor) {
+  const d = (valor || '').replace(/\D/g, '');
+  if (!d) return true;
+  if (d.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(d)) return false;
+  let soma = 0;
+  for (let i = 0; i < 9; i++) soma += Number(d[i]) * (10 - i);
+  let dv = (soma * 10) % 11;
+  if (dv === 10) dv = 0;
+  if (dv !== Number(d[9])) return false;
+  soma = 0;
+  for (let i = 0; i < 10; i++) soma += Number(d[i]) * (11 - i);
+  dv = (soma * 10) % 11;
+  if (dv === 10) dv = 0;
+  return dv === Number(d[10]);
+}
+
 export function formatarDataBr(iso) {
   if (!iso) return '—';
   const [a, m, d] = iso.slice(0, 10).split('-');

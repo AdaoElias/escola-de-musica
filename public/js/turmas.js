@@ -22,29 +22,32 @@ for (const el of document.querySelectorAll('[data-futuro]')) {
 }
 
 async function carregarProfessores() {
-  const { data } = await sb.from('professores').select('id, nome').eq('ativo', true).order('nome');
+  const { data } = await sb.from('professores').select('id, nome, ativo').order('nome');
   professores = data || [];
   const sel = document.getElementById('professor_id');
   sel.innerHTML = '';
   for (const p of professores) {
     const opt = document.createElement('option');
     opt.value = p.id;
-    opt.textContent = p.nome;
+    opt.textContent = p.ativo ? p.nome : p.nome + ' (inativo)';
     sel.appendChild(opt);
   }
 }
 
 async function carregar() {
-  const { data, error } = await sb.from('turmas').select('*, professor:professores(nome)').order('nome');
+  const { data, error } = await sb.from('turmas').select('*, professor:professores(nome, ativo)').order('nome');
   if (error) return mostrarErroTabela(error.message);
   tbody.innerHTML = '';
   for (const t of data) {
     const hora = t.horario ? t.horario.slice(0, 5) : '—';
+    const prof = t.professor
+      ? (t.professor.nome + (t.professor.ativo === false ? ' <span class="badge b-warn">inativo</span>' : ''))
+      : '—';
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${t.nome}</td>
       <td>${t.instrumento || '—'}</td>
-      <td>${t.professor ? t.professor.nome : '—'}</td>
+      <td>${prof}</td>
       <td>${t.dia_semana || '—'}</td>
       <td>${hora}</td>
       <td>R$ ${Number(t.valor_mensal).toFixed(2)}</td>
@@ -99,6 +102,13 @@ form.addEventListener('submit', async (e) => {
     status: document.getElementById('status').value,
   };
   if (!dados.nome) {
+    salvarBtn.disabled = false;
+    return;
+  }
+  // RN14: turma ativa exige professor ativo.
+  const prof = professores.find((p) => p.id === dados.professor_id);
+  if (dados.status === 'ativa' && prof && prof.ativo === false) {
+    erro.textContent = 'Turma ativa exige professor ativo. Transfira a turma ou marque a turma como encerrada.';
     salvarBtn.disabled = false;
     return;
   }

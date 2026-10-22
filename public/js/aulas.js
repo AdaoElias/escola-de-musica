@@ -137,7 +137,7 @@ async function carregarProgresso() {
   if (!linhas.length) {
     const tr = document.createElement('tr');
     tr.innerHTML = '<td colspan="2" class="error">' +
-      (r1.error ? 'Erro ao carregar progresso: ' + r1.error.message + ' (execute MIGRACAO_ETAPA4.sql no Supabase)' : 'Sem dados de progresso ainda.') +
+      (r1.error ? 'Erro ao carregar progresso: ' + r1.error.message + ' (aplique INSTALAR.sql no Supabase)' : 'Sem dados de progresso ainda.') +
       '</td>';
     tbodyProgresso.appendChild(tr);
     return;

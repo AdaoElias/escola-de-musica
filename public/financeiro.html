@@ -109,7 +109,8 @@
           </label>
           <div class="grid2">
             <label class="field">Valor (R$) <span class="obrigatorio">*</span>
-              <input type="number" id="valor" min="0" step="0.01" required>
+              <input type="number" id="valor" step="0.01" required>
+              <p class="hint" id="hint-valor">Informe o valor da cobrança.</p>
             </label>
             <label class="field">Vencimento <span class="obrigatorio">*</span>
               <input type="date" id="vencimento" required>
@@ -121,7 +122,7 @@
             </label>
             <label class="field">Tipo
               <select id="tipo">
-                <option value="ajuste">Ajuste manual</option>
+                <option value="ajuste">Ajuste manual (aceita desconto)</option>
                 <option value="mensalidade">Mensalidade</option>
                 <option value="aula_avulsa">Aula avulsa</option>
               </select>

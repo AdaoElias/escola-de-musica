@@ -74,6 +74,7 @@ async function iniciar() {
   ligaFecharModais(modalLancar);
   formBaixar.addEventListener('submit', salvarBaixar);
   formLancar.addEventListener('submit', salvarLancar);
+  document.getElementById('tipo').addEventListener('change', ajustarCampoValor);
   tbody.addEventListener('click', acoesTabela);
 
   await gerar(true);
@@ -250,7 +251,22 @@ function abrirLancar() {
   document.getElementById('vencimento').value = iso;
   document.getElementById('competencia').value = mesAtual;
   document.getElementById('tipo').value = 'ajuste';
+  ajustarCampoValor();
   modalLancar.showModal();
+}
+
+// Ajuste aceita valor negativo (desconto/crédito - RF29);
+// mensalidade e aula avulsa não podem ser negativas.
+function ajustarCampoValor() {
+  const campoTipo = document.getElementById('tipo');
+  const campoValor = document.getElementById('valor');
+  const hint = document.getElementById('hint-valor');
+  const ehAjuste = campoTipo.value === 'ajuste';
+  campoValor.min = ehAjuste ? '' : '0';
+  hint.textContent = ehAjuste
+    ? 'Ajuste: valor positivo lança cobrança extra; valor negativo registra desconto/crédito.'
+    : 'Valor da cobrança (não pode ser negativo).';
+  if (!ehAjuste && Number(campoValor.value) < 0) campoValor.value = '';
 }
 
 async function salvarLancar(e) {
@@ -266,9 +282,13 @@ async function salvarLancar(e) {
   const vencimento = document.getElementById('vencimento').value;
   const competencia = document.getElementById('competencia').value;
   const tipo = document.getElementById('tipo').value;
+  const ehAjuste = tipo === 'ajuste';
 
-  if (!aluno || !descricao || !(valor > 0) || !vencimento || !competencia) {
-    erro.textContent = 'Preencha aluno, descrição, valor, vencimento e competência.';
+  const valorOk = Number.isFinite(valor) && (ehAjuste ? valor !== 0 : valor > 0);
+  if (!aluno || !descricao || !valorOk || !vencimento || !competencia) {
+    erro.textContent = !valorOk && ehAjuste
+      ? 'Informe um valor diferente de zero (positivo para cobrança extra, negativo para desconto).'
+      : 'Preencha aluno, descrição, valor, vencimento e competência.';
     btn.disabled = false;
     return;
   }

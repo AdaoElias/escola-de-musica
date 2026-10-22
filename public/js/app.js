@@ -38,7 +38,7 @@ const [
   sb.from('conteudos_ministrados').select('id', { count: 'exact', head: true }).gte('data_aula', primeiroDoMes),
   sb.from('conteudos_ministrados').select('data_aula, titulo, turma:turmas(nome), matricula:matriculas(aluno:alunos(nome))').order('data_aula', { ascending: false }).limit(5),
   sb.from('alunos').select('nome, criado_em').eq('ativo', true).order('criado_em', { ascending: false }).limit(5),
-  sb.from('turmas').select('id, nome').eq('status', 'ativa'),
+  sb.from('turmas').select('id, nome, professor:professores(nome, ativo)').eq('status', 'ativa'),
   sb.from('conteudos_ministrados').select('turma_id, grade_id'),
 ]);
 const rMat = await rMatriculas;
@@ -113,6 +113,16 @@ semAula.slice(0, 3).forEach((t) => {
 if (semAula.length > 3) {
   alerta('info', 'E mais ' + (semAula.length - 3) + ' turma(s)',
     'Consultem a lista completa de turmas.', '/turmas.html');
+}
+
+const semProfessorAtivo = turmasLista.filter((t) => t.professor && t.professor.ativo === false);
+semProfessorAtivo.slice(0, 3).forEach((t) => {
+  alerta('danger', 'Turma sem professor ativo',
+    '«' + t.nome + '» está com o professor «' + t.professor.nome + '» inativo.', '/professores.html');
+});
+if (semProfessorAtivo.length > 3) {
+  alerta('danger', 'E mais ' + (semProfessorAtivo.length - 3) + ' turma(s)',
+    'Altere o professor da turma ou reative o professor.', '/turmas.html');
 }
 
 const cmPorTurma = {};
