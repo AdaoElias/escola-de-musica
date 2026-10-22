@@ -1,4 +1,6 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
+// Cliente Supabase vendorizado localmente (mesma versão do package.json: 2.45.0).
+// Sem CDN no caminho crítico de runtime: public/js/vendor/*.esm.js
+import { createClient } from './vendor/supabase-supabase-js-2.45.0.esm.js';
 
 let client = null;
 
